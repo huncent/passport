@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/liuhengloveyou/passport/common"
+	"github.com/liuhengloveyou/passport/models"
 
 	log "github.com/golang/glog"
 	"github.com/liuhengloveyou/validator"
@@ -48,6 +49,8 @@ func (p *UserAdd) doPost(w http.ResponseWriter, r *http.Request) {
 		log.Errorln(*user, err)
 		return
 	}
+
+	(&models.User{Email: user.Email, Phone: user.Phone, Password: user.Pwd}).Add()
 
 	return
 }

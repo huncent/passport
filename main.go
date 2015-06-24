@@ -13,6 +13,11 @@ import (
 
 func init() {
 	runtime.GOMAXPROCS(8)
+
+	if e := common.InitDbPool("./db.conf"); e != nil {
+		panic(e)
+	}
+
 	common.InitServ()
 }
 
@@ -29,6 +34,7 @@ func main() {
 		http.Handle("/user/auth", &controllers.UserAuth{})
 		http.Handle("/user/logout", &controllers.UserLogOut{})
 	*/
+
 	s := &http.Server{
 		Addr:           common.Config.Listen,
 		ReadTimeout:    10 * time.Minute,

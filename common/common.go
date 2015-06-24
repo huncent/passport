@@ -10,8 +10,7 @@ var (
 )
 
 type ConfigS struct {
-	Listen   string `json:"listen"`
-	MysqlUrl string `json:"mysql_url"`
+	Listen string `json:"listen"`
 }
 
 func InitServ() {
