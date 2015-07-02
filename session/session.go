@@ -70,7 +70,7 @@ func NewSessionManager(sessionConfig interface{}) (m *SessionManager) {
 		list:         list.New(),
 	}
 
-	go m.gc()
+	m.gc()
 
 	return
 }
@@ -178,7 +178,7 @@ func (p *SessionManager) gc() {
 		var element *list.Element
 
 		p.lock.RLock()
-		if element = p.list.Back(); element == nil {
+		if element = p.list.Front(); element == nil {
 			p.lock.RUnlock()
 			break
 		}
