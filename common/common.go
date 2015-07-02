@@ -6,15 +6,16 @@ import (
 )
 
 var (
-	Config ConfigS // 系统配置信息
+	ServConfig ConfigServ
 )
 
-type ConfigS struct {
+type ConfigServ struct {
 	Listen string `json:"listen"`
+	ServID string `json:"serv_id"`
 }
 
 func InitServ() {
-	initConfig("./app.conf", &Config)
+	initConfig("./app.conf", &ServConfig)
 }
 
 func initConfig(fn string, config interface{}) {

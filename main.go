@@ -27,22 +27,23 @@ func main() {
 	http.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir("./static/"))))
 
 	http.Handle("/user/add", &controllers.UserAdd{})
+	http.Handle("/user/login", &controllers.UserLogin{})
+
 	/*
 		http.Handle("/user/mod", &controllers.UserModify{})
 		http.Handle("/user/del", &controllers.UserDel{})
-		http.Handle("/user/login", &controllers.UserLogin{})
 		http.Handle("/user/auth", &controllers.UserAuth{})
 		http.Handle("/user/logout", &controllers.UserLogOut{})
 	*/
 
 	s := &http.Server{
-		Addr:           common.Config.Listen,
+		Addr:           common.ServConfig.Listen,
 		ReadTimeout:    10 * time.Minute,
 		WriteTimeout:   10 * time.Minute,
 		MaxHeaderBytes: 1 << 20,
 	}
 
-	fmt.Println("GO..." + common.Config.Listen)
+	fmt.Println("GO..." + common.ServConfig.Listen)
 	if err := s.ListenAndServe(); err != nil {
 		panic("ListenAndServe: " + err.Error())
 	}
