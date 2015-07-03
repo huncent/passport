@@ -91,20 +91,15 @@ func (p *SessionManager) GetSession(w http.ResponseWriter, r *http.Request) (ses
 		return
 	}
 
-	p.lock.RLock()
+	p.lock.Lock() // @@@ 不好
 	if sess, ok := p.sessions[sid]; ok {
 		session = sess.Value.(SessionStore)
-
-		// @@@ 不好
-		p.lock.RUnlock()
-		p.lock.Lock()
 		p.list.MoveToBack(sess)
-		p.lock.Lock()
-		p.lock.RLock()
 
+		p.lock.Unlock()
 		return
 	}
-	p.lock.RUnlock()
+	p.lock.Unlock()
 
 	// 新会话
 	session, err = newSessionStore(p.StoreType, p.StoreConfig)

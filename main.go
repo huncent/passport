@@ -28,13 +28,9 @@ func main() {
 
 	http.Handle("/user/add", &controllers.UserAdd{})
 	http.Handle("/user/login", &controllers.UserLogin{})
-
-	/*
-		http.Handle("/user/mod", &controllers.UserModify{})
-		http.Handle("/user/del", &controllers.UserDel{})
-		http.Handle("/user/auth", &controllers.UserAuth{})
-		http.Handle("/user/logout", &controllers.UserLogOut{})
-	*/
+	http.Handle("/user/mod", &controllers.UserModify{})
+	http.Handle("/user/auth", &controllers.UserAuth{})
+	//	http.Handle("/user/logout", &controllers.UserLogOut{})
 
 	s := &http.Server{
 		Addr:           common.ServConfig.Listen,

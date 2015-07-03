@@ -13,10 +13,6 @@ import (
 )
 
 type UserAdd struct {
-	Nickname string `validate:"noneor,max=20"`
-	Email    string `validate:"noneor,email"`
-	Phone    string `validate:"noneor,cellphone"`
-	Password string `validate:"nonone,min=6,max=24"`
 }
 
 func (p *UserAdd) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -37,7 +33,7 @@ func (p *UserAdd) doPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := &UserAdd{}
+	user := &models.UserRequest{}
 	err = json.Unmarshal(body, user)
 	if err != nil {
 		gocommon.HttpErr(w, http.StatusBadRequest, []byte(err.Error()))
@@ -51,7 +47,7 @@ func (p *UserAdd) doPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = (&models.User{Nickname: user.Nickname, Email: user.Email, Phone: user.Phone, Password: user.Password}).Add()
+	err = (&models.User{Nickname: user.Nickname, Email: user.Email, Cellphone: user.Cellphone, Password: user.Password}).Add()
 	if err != nil {
 		gocommon.HttpErr(w, http.StatusInternalServerError, []byte(err.Error()))
 		log.Errorln(*user, err)

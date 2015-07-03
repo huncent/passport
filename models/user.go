@@ -13,11 +13,19 @@ import (
 
 var globalID *gocommon.GlobalID
 
+type UserRequest struct {
+	Id        int64  `validate:"-" json:"id,omitempty"`
+	Nickname  string `validate:"noneor,max=20" json:"nickname,omitempty"`
+	Cellphone string `validate:"noneor,cellphone" json:"cellphone,omitempty"`
+	Email     string `validate:"noneor,email" json:"email,omitempty"`
+	Password  string `validate:"nonone,min=6,max=24" json:"password,omitempty"`
+}
+
 type User struct {
 	Id         int64     `xorm:"BIGINT(64)"`
-	Nickname   string    `xorm:"VARCHAR(45)"`
-	Phone      string    `xorm:"VARCHAR(11)"`
+	Cellphone  string    `xorm:"VARCHAR(11)"`
 	Email      string    `xorm:"VARCHAR(45)"`
+	Nickname   string    `xorm:"VARCHAR(45)"`
 	Password   string    `xorm:"not null VARCHAR(45)"`
 	AddTime    time.Time `xorm:"not null default 'CURRENT_TIMESTAMP' TIMESTAMP"`
 	UpdateTime time.Time `xorm:"not null DATETIME updated"`
@@ -34,6 +42,14 @@ func (p *User) Add() (e error) {
 	}
 
 	_, e = common.Xorms["passport"].InsertOne(p)
+
+	return
+}
+
+func (p *User) Update() (e error) {
+	p.encryPWD()
+
+	_, e = common.Xorms["passport"].Id(p.Id).Update(p)
 
 	return
 }
@@ -74,15 +90,15 @@ func (p *User) addCheck() error {
 	if p.Id <= 0 {
 		return fmt.Errorf("user.Id nil")
 	}
-	if p.Phone == "" && p.Email == "" {
+	if p.Cellphone == "" && p.Email == "" {
 		return fmt.Errorf("user.Phone and p.Email nil")
 	}
 	if p.Password == "" {
 		return fmt.Errorf("user.Password nil")
 	}
 
-	if p.Phone != "" {
-		p.Phone = strings.ToLower(p.Phone)
+	if p.Cellphone != "" {
+		p.Cellphone = strings.ToLower(p.Cellphone)
 	}
 	if p.Email != "" {
 		p.Email = strings.ToLower(p.Email)
