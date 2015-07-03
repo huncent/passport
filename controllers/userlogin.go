@@ -13,8 +13,7 @@ import (
 	"github.com/liuhengloveyou/validator"
 )
 
-type UserLogin struct {
-}
+type UserLogin struct{}
 
 func (p *UserLogin) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
@@ -113,7 +112,7 @@ func (p *UserLogin) doPost(w http.ResponseWriter, r *http.Request) {
 	sess.Set("version", mUser.Version)
 	log.Infoln(sess)
 
-	gocommon.HttpErr(w, http.StatusOK, nil)
+	gocommon.HttpErr(w, http.StatusOK, []byte("true"))
 
 	return
 }

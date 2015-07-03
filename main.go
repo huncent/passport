@@ -30,7 +30,7 @@ func main() {
 	http.Handle("/user/login", &controllers.UserLogin{})
 	http.Handle("/user/mod", &controllers.UserModify{})
 	http.Handle("/user/auth", &controllers.UserAuth{})
-	//	http.Handle("/user/logout", &controllers.UserLogOut{})
+	http.Handle("/user/logout", &controllers.UserLogout{})
 
 	s := &http.Server{
 		Addr:           common.ServConfig.Listen,

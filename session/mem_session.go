@@ -54,7 +54,12 @@ func (p *MemSessionStore) Active() int64 {
 	return p.active
 }
 
-func (p *MemSessionStore) Release() {}
+func (p *MemSessionStore) Release() {
+	p.lock.Lock()
+	p.active = -1
+	p.data = nil
+	p.lock.Unlock()
+}
 
 func NewMemSessionStore(config interface{}) (SessionStore, error) {
 	return &MemSessionStore{

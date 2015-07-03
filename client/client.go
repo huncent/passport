@@ -7,20 +7,20 @@ import (
 	"strings"
 
 	"github.com/liuhengloveyou/passport/common"
-	"github.com/liuhengloveyou/passport/controllers"
+	"github.com/liuhengloveyou/passport/models"
 )
 
 type Passport struct {
 	ServDomain string
 }
 
-func (p *Passport) UserAdd(cellphone, email, password string) (status int, response []byte, err error) {
-	scellphone, semail := strings.TrimSpace(cellphone), strings.TrimSpace(email)
+func (p *Passport) UserAdd(cellphone, email, nickname, password string) (status int, response []byte, err error) {
+	scellphone, semail, snickname := strings.TrimSpace(cellphone), strings.TrimSpace(email), strings.TrimSpace(nickname)
 	if scellphone == "" && semail == "" {
 		return 0, nil, fmt.Errorf("用户手机号码,邮箱地址不可同时为空.")
 	}
 
-	body, _ := json.Marshal(controllers.UserAdd{semail, scellphone, password})
+	body, _ := json.Marshal(models.UserRequest{Cellphone: scellphone, Email: semail, Nickname: snickname, Password: password})
 
 	status, _, response, err = common.PostRequest(p.ServDomain+"/user/add", body, nil)
 
@@ -33,7 +33,7 @@ func (p *Passport) UserLogin(nickname, cellphone, email, password string) (statu
 		return 0, nil, fmt.Errorf("用户昵称,用户手机号码,邮箱地址不可同时为空.")
 	}
 
-	body, _ := json.Marshal(controllers.UserLogin{snickname, scellphone, semail, password})
+	body, _ := json.Marshal(models.UserRequest{snickname, scellphone, semail, password})
 
 	status, cookies, _, err = common.PostRequest(p.ServDomain+"/user/login", body, nil)
 

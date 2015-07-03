@@ -91,15 +91,13 @@ func (p *SessionManager) GetSession(w http.ResponseWriter, r *http.Request) (ses
 		return
 	}
 
-	p.lock.Lock() // @@@ 不好
 	if sess, ok := p.sessions[sid]; ok {
 		session = sess.Value.(SessionStore)
+		p.lock.Lock()
 		p.list.MoveToBack(sess)
-
 		p.lock.Unlock()
 		return
 	}
-	p.lock.Unlock()
 
 	// 新会话
 	session, err = newSessionStore(p.StoreType, p.StoreConfig)
@@ -133,20 +131,22 @@ func (p *SessionManager) GetSession(w http.ResponseWriter, r *http.Request) (ses
 	return
 }
 
-func (p *SessionManager) SessionDestroy(w http.ResponseWriter, r *http.Request) {
+func (p *SessionManager) SessionDestroy(w http.ResponseWriter, r *http.Request) (userid, sessionid string) {
 	cookie, err := r.Cookie(p.CookieName)
 	if err != nil || cookie.Value == "" {
 		return
 	}
 
-	sid, _ := url.QueryUnescape(cookie.Value)
-	p.lock.Lock()
-	if session, ok := p.sessions[sid]; ok {
+	sessionid, _ = url.QueryUnescape(cookie.Value)
+
+	if session, ok := p.sessions[sessionid]; ok {
+		if session.Value.(SessionStore).Get("id") == nil {
+			return
+		}
+
+		userid = session.Value.(SessionStore).Get("id").(string)
 		session.Value.(SessionStore).Release()
-		delete(p.sessions, sid)
-		p.list.Remove(session)
 	}
-	p.lock.Unlock()
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     p.CookieName,
@@ -154,6 +154,8 @@ func (p *SessionManager) SessionDestroy(w http.ResponseWriter, r *http.Request) 
 		HttpOnly: true,
 		Expires:  time.Now(),
 		MaxAge:   -1})
+
+	return
 }
 
 func (p *SessionManager) sessionId() (string, error) {
@@ -186,6 +188,7 @@ func (p *SessionManager) gc() {
 		p.lock.RUnlock()
 
 		p.lock.Lock()
+		element.Value.(SessionStore).Release()
 		delete(p.sessions, element.Value.(SessionStore).Id(""))
 		p.list.Remove(element)
 		p.lock.Unlock()
@@ -197,4 +200,8 @@ func (p *SessionManager) gc() {
 // 公开接口
 func GetSession(w http.ResponseWriter, r *http.Request) (session SessionStore, err error) {
 	return defaultSessionManager.GetSession(w, r)
+}
+
+func SessionDestroy(w http.ResponseWriter, r *http.Request) (userid, sessionid string) {
+	return defaultSessionManager.SessionDestroy(w, r)
 }
