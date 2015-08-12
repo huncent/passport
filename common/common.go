@@ -14,20 +14,19 @@ type ConfigServ struct {
 	ServID string `json:"serv_id"`
 }
 
-func InitServ() {
-	initConfig("./app.conf", &ServConfig)
+func InitPassportServ() error {
+	return initConfig("./app.conf", &ServConfig)
 }
 
-func initConfig(fn string, config interface{}) {
+func initConfig(fn string, config interface{}) error {
 	r, err := os.Open(fn)
 	if err != nil {
-		panic(err)
+		return err
 	}
+	defer r.Close()
 
 	decoder := json.NewDecoder(r)
 	if err := decoder.Decode(config); err != nil {
-		panic(err)
+		return err
 	}
-
-	r.Close()
 }

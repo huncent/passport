@@ -12,7 +12,7 @@ var (
 	Xorms = make(map[string]*xorm.Engine)
 )
 
-func InitXormPool(fn string) error {
+func InitDbPool(fn string) error {
 	var dbs []struct {
 		Name   string `json:"name"`
 		NGType string `json:"ng_type"`
