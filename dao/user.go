@@ -1,10 +1,6 @@
 package dao
 
 import (
-	"crypto/sha1"
-	"fmt"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/liuhengloveyou/passport/common"

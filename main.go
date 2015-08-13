@@ -2,10 +2,7 @@ package main
 
 import (
 	"flag"
-	"fmt"
-	"net/http"
 	"runtime"
-	"time"
 
 	"github.com/liuhengloveyou/passport/common"
 	"github.com/liuhengloveyou/passport/face"

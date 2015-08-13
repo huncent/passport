@@ -29,4 +29,6 @@ func initConfig(fn string, config interface{}) error {
 	if err := decoder.Decode(config); err != nil {
 		return err
 	}
+
+	return nil
 }

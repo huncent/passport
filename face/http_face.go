@@ -1,11 +1,13 @@
 package face
 
 import (
-	"encoding/json"
-	"io/ioutil"
+	"fmt"
 	"net/http"
+	"time"
 
-	log "github.com/golang/glog"
+	"github.com/liuhengloveyou/passport/action"
+	"github.com/liuhengloveyou/passport/common"
+
 	gocommon "github.com/liuhengloveyou/go-common"
 )
 
@@ -13,11 +15,13 @@ func HttpService() {
 	http.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir("./static/"))))
 
 	http.HandleFunc("/user/add", UserAdd)
-	http.HandleFunc("/user/login", UserLogin)
 	http.HandleFunc("/user/mod", UserModify)
-	http.HandleFunc("/user/auth", UserAuth)
-	http.HandleFunc("/user/logout", UserLogout)
+	/*
+		http.HandleFunc("/user/login", UserLogin)
 
+		http.HandleFunc("/user/auth", UserAuth)
+		http.HandleFunc("/user/logout", UserLogout)
+	*/
 	s := &http.Server{
 		Addr:           common.ServConfig.Listen,
 		ReadTimeout:    10 * time.Minute,
@@ -32,39 +36,28 @@ func HttpService() {
 }
 
 func UserAdd(w http.ResponseWriter, r *http.Request) {
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		gocommon.HttpErr(w, http.StatusBadRequest, []byte(err.Error()))
-		log.Errorln("ioutil.ReadAll(r.Body) ERR: ", err)
-		return
+	code, e := action.AddUserFromHttp(r)
+	if e != nil {
+		gocommon.HttpErr(w, code, []byte(e.Error()))
+	} else {
+		gocommon.HttpErr(w, http.StatusOK, nil)
 	}
-
-	user := &models.UserRequest{}
-	err = json.Unmarshal(body, user)
-	if err != nil {
-		gocommon.HttpErr(w, http.StatusBadRequest, []byte(err.Error()))
-		log.Errorln("json.Unmarshal(body, user) ERR: ", err)
-		return
-	}
-
-	if err = validator.Validate(user); err != nil {
-		gocommon.HttpErr(w, http.StatusBadRequest, []byte(err.Error()))
-		log.Errorln(*user, err)
-		return
-	}
-
-	err = (&models.User{Nickname: user.Nickname, Email: user.Email, Cellphone: user.Cellphone, Password: user.Password}).Add()
-	if err != nil {
-		gocommon.HttpErr(w, http.StatusInternalServerError, []byte(err.Error()))
-		log.Errorln(*user, err)
-		return
-	}
-
-	gocommon.HttpErr(w, http.StatusOK, nil)
 
 	return
 }
 
+func UserModify(w http.ResponseWriter, r *http.Request) {
+	code, e := action.UserModifyFromHttp(r)
+	if e != nil {
+		gocommon.HttpErr(w, code, []byte(e.Error()))
+	} else {
+		gocommon.HttpErr(w, http.StatusOK, nil)
+	}
+
+	return
+}
+
+/*
 func UserLogin(w http.ResponseWriter, r *http.Request) {
 	//
 	sess, err := session.GetSession(w, r)
@@ -201,50 +194,4 @@ func UserAuth(w http.ResponseWriter, r *http.Request) {
 
 	return
 }
-
-func UserModify(w http.ResponseWriter, r *http.Request) {
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		gocommon.HttpErr(w, http.StatusBadRequest, []byte(err.Error()))
-		log.Errorln("ioutil.ReadAll(r.Body) ERR: ", err)
-		return
-	}
-
-	user := &models.UserRequest{}
-	err = json.Unmarshal(body, user)
-	if err != nil {
-		gocommon.HttpErr(w, http.StatusBadRequest, []byte(err.Error()))
-		log.Errorln("json.Unmarshal(body, user) ERR: ", err)
-		return
-	}
-
-	if user.Nickname == "" && user.Password == "" {
-		gocommon.HttpErr(w, http.StatusBadRequest, []byte("用户昵称和密码可更新."))
-		log.Errorln("usermodify ERR: ", *user)
-		return
-	}
-
-	if err = validator.Validate(user); err != nil {
-		gocommon.HttpErr(w, http.StatusBadRequest, []byte(err.Error()))
-		log.Errorln(*user, err)
-		return
-	}
-
-	mUser := &models.User{}
-	if user.Nickname != "" {
-		mUser.Nickname = user.Nickname
-	}
-	if user.Password != "" {
-		mUser.Password = user.Password
-	}
-
-	err = mUser.Update()
-	if err != nil {
-		gocommon.HttpErr(w, http.StatusInternalServerError, []byte(err.Error()))
-		log.Errorln(*user, err)
-		return
-	}
-
-	gocommon.HttpErr(w, http.StatusOK, nil)
-
-}
+*/

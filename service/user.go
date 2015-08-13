@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/liuhengloveyou/passport/common"
 	"github.com/liuhengloveyou/passport/dao"
@@ -31,14 +30,14 @@ type User struct {
 func (p *User) AddUser() (e error) {
 	p.Id = genUserID()
 	if p.Id <= 0 {
-		return fmt.Errorf("user.Id nil")
+		return fmt.Errorf("用户ID空.")
 	}
 
 	if p.Cellphone == "" && p.Email == "" {
-		return fmt.Errorf("user.Phone and p.Email nil")
+		return fmt.Errorf("用户手机号和邮箱地址同时为空.")
 	}
 	if p.Password == "" {
-		return fmt.Errorf("user.Password nil")
+		return fmt.Errorf("用户密码为空.")
 	}
 
 	if p.Cellphone != "" {
@@ -48,6 +47,10 @@ func (p *User) AddUser() (e error) {
 		p.Email = strings.ToLower(p.Email)
 	}
 
+	if e = validator.Validate(p); e != nil {
+		return
+	}
+
 	p.encryPWD()
 
 	return p.toDao().Insert()
@@ -55,21 +58,29 @@ func (p *User) AddUser() (e error) {
 
 func (p *User) UpdateUser() (e error) {
 	if p.Id <= 0 {
-		return fmt.Errorf("user.Id nil")
+		return fmt.Errorf("用户ID空.")
 	}
 
-	if e = validator.Validate(nur); e != nil {
+	p.Cellphone, p.Email = "", ""
+
+	if p.Nickname == "" && p.Password == "" {
+		return fmt.Errorf("只有用户昵称和密码可更新.")
+	}
+
+	if e = validator.Validate(p); e != nil {
 		return
 	}
 
-	p.encryPWD()
+	if p.Password != "" {
+		p.encryPWD()
+	}
 
 	return p.toDao().Update()
 }
 
 ////////
 
-func (p *User) toDao() (dao *dao.User, e error) {
+func (p *User) toDao() *dao.User {
 	return &dao.User{
 		Id:        p.Id,
 		Cellphone: p.Cellphone,
@@ -94,6 +105,6 @@ func encryPWD(userid int64, password string) string {
 
 // 生成用户ID
 func genUserID() int64 {
-	id, _ = strconv.ParseInt(gid.ID(), 10, 64)
+	id, _ := strconv.ParseInt(gid.ID(), 10, 64)
 	return id
 }
