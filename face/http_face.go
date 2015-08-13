@@ -1,13 +1,16 @@
 package face
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"time"
 
-	"github.com/liuhengloveyou/passport/action"
 	"github.com/liuhengloveyou/passport/common"
+	"github.com/liuhengloveyou/passport/service"
 
+	log "github.com/golang/glog"
 	gocommon "github.com/liuhengloveyou/go-common"
 )
 
@@ -36,25 +39,52 @@ func HttpService() {
 }
 
 func UserAdd(w http.ResponseWriter, r *http.Request) {
-	code, e := action.AddUserFromHttp(r)
-	if e != nil {
-		gocommon.HttpErr(w, code, []byte(e.Error()))
-	} else {
-		gocommon.HttpErr(w, http.StatusOK, nil)
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		log.Errorln("ioutil.ReadAll(r.Body) ERR: ", err)
+		return gocommon.HttpErr(w, http.StatusBadRequest, []byte(err.Error()))
+
 	}
 
-	return
+	user := &service.User{}
+	err = json.Unmarshal(body, user)
+	if err != nil {
+		log.Errorln("json.Unmarshal(body, user) ERR: ", err)
+		return gocommon.HttpErr(w, http.StatusBadRequest, []byte(err.Error()))
+	}
+
+	err = user.AddUser()
+	if err != nil {
+		log.Errorln("user.AddUser() ERR: ", err)
+		return gocommon.HttpErr(w, http.StatusInternalServerError, []byte(err.Error()))
+
+	}
+
+	return gocommon.HttpErr(w, http.StatusOK, nil)
 }
 
 func UserModify(w http.ResponseWriter, r *http.Request) {
-	code, e := action.UserModifyFromHttp(r)
-	if e != nil {
-		gocommon.HttpErr(w, code, []byte(e.Error()))
-	} else {
-		gocommon.HttpErr(w, http.StatusOK, nil)
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		log.Errorln("ioutil.ReadAll(r.Body) ERR: ", err)
+		return gocommon.HttpErr(w, http.StatusBadRequest, []byte(err.Error()))
 	}
 
-	return
+	user := &service.User{}
+	err = json.Unmarshal(body, user)
+	if err != nil {
+		log.Errorln("json.Unmarshal(body, user) ERR: ", err)
+		return gocommon.HttpErr(w, http.StatusBadRequest, []byte(err.Error()))
+	}
+
+	err = user.UpdateUser()
+	if err != nil {
+		log.Errorln(*user, err)
+		return gocommon.HttpErr(w, http.StatusInternalServerError, []byte(err.Error()))
+	}
+
+	return gocommon.HttpErr(w, http.StatusOK, nil)
+
 }
 
 /*
