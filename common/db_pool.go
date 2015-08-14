@@ -2,7 +2,6 @@ package common
 
 import (
 	"encoding/json"
-	"os"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/go-xorm/xorm"
@@ -12,7 +11,7 @@ var (
 	Xorms = make(map[string]*xorm.Engine)
 )
 
-func InitDbPool(fn string) error {
+func InitDbPool(conf []byte) (err error) {
 	var dbs []struct {
 		Name   string `json:"name"`
 		NGType string `json:"ng_type"`
@@ -20,15 +19,8 @@ func InitDbPool(fn string) error {
 		DSN    string `json:"dsn"`
 	}
 
-	r, err := os.Open(fn)
-	if err != nil {
-		return err
-	}
-	defer r.Close()
-
-	decoder := json.NewDecoder(r)
-	if err := decoder.Decode(&dbs); err != nil {
-		return err
+	if err = json.Unmarshal(conf, dbs); err != nil {
+		return
 	}
 
 	for _, db := range dbs {

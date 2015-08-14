@@ -42,7 +42,8 @@ func UserAdd(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		log.Errorln("ioutil.ReadAll(r.Body) ERR: ", err)
-		return gocommon.HttpErr(w, http.StatusBadRequest, []byte(err.Error()))
+		gocommon.HttpErr(w, http.StatusBadRequest, []byte(err.Error()))
+		return
 
 	}
 
@@ -50,40 +51,47 @@ func UserAdd(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(body, user)
 	if err != nil {
 		log.Errorln("json.Unmarshal(body, user) ERR: ", err)
-		return gocommon.HttpErr(w, http.StatusBadRequest, []byte(err.Error()))
+		gocommon.HttpErr(w, http.StatusBadRequest, []byte(err.Error()))
+		return
 	}
 
 	err = user.AddUser()
 	if err != nil {
 		log.Errorln("user.AddUser() ERR: ", err)
-		return gocommon.HttpErr(w, http.StatusInternalServerError, []byte(err.Error()))
+		gocommon.HttpErr(w, http.StatusInternalServerError, []byte(err.Error()))
+		return
 
 	}
 
-	return gocommon.HttpErr(w, http.StatusOK, nil)
+	gocommon.HttpErr(w, http.StatusOK, nil)
+	return
 }
 
 func UserModify(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		log.Errorln("ioutil.ReadAll(r.Body) ERR: ", err)
-		return gocommon.HttpErr(w, http.StatusBadRequest, []byte(err.Error()))
+		gocommon.HttpErr(w, http.StatusBadRequest, []byte(err.Error()))
+		return
 	}
 
 	user := &service.User{}
 	err = json.Unmarshal(body, user)
 	if err != nil {
 		log.Errorln("json.Unmarshal(body, user) ERR: ", err)
-		return gocommon.HttpErr(w, http.StatusBadRequest, []byte(err.Error()))
+		gocommon.HttpErr(w, http.StatusBadRequest, []byte(err.Error()))
+		return
 	}
 
 	err = user.UpdateUser()
 	if err != nil {
 		log.Errorln(*user, err)
-		return gocommon.HttpErr(w, http.StatusInternalServerError, []byte(err.Error()))
+		gocommon.HttpErr(w, http.StatusInternalServerError, []byte(err.Error()))
+		return
 	}
 
-	return gocommon.HttpErr(w, http.StatusOK, nil)
+	gocommon.HttpErr(w, http.StatusOK, nil)
+	return
 
 }
 

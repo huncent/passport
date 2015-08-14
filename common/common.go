@@ -12,10 +12,19 @@ var (
 type ConfigServ struct {
 	Listen string `json:"listen"`
 	ServID string `json:"serv_id"`
+	DBs    []byte `json:"dbs"`
 }
 
 func InitPassportServ() error {
-	return initConfig("./app.conf", &ServConfig)
+	if e := initConfig("./app.conf", &ServConfig); e != nil {
+		return e
+	}
+
+	if e := InitDbPool(ServConfig.DBs); e != nil {
+		return e
+	}
+
+	return nil
 }
 
 func initConfig(fn string, config interface{}) error {

@@ -14,10 +14,6 @@ func init() {
 	if e := common.InitPassportServ(); e != nil {
 		panic(e)
 	}
-
-	if e := common.InitDbPool("./db.conf"); e != nil {
-		panic(e)
-	}
 }
 
 func main() {
