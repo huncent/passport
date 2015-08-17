@@ -10,7 +10,7 @@ import (
 var passClient = &client.Passport{"http://localhost:8080"}
 
 func TestUserAdd(t *testing.T) {
-	stat, rst, e := passClient.UserAdd("18510511015", "liuhengloveyou@gmail.com", "123456")
+	stat, rst, e := passClient.UserAdd("18510511015", "liuhengloveyou@gmail.com", "L", "123456")
 	fmt.Println(stat, rst, e)
 }
 

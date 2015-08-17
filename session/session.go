@@ -131,7 +131,7 @@ func (p *SessionManager) GetSession(w http.ResponseWriter, r *http.Request) (ses
 	return
 }
 
-func (p *SessionManager) SessionDestroy(w http.ResponseWriter, r *http.Request) (userid, sessionid string) {
+func (p *SessionManager) SessionDestroy(w http.ResponseWriter, r *http.Request) (userid int64, sessionid string) {
 	cookie, err := r.Cookie(p.CookieName)
 	if err != nil || cookie.Value == "" {
 		return
@@ -144,7 +144,7 @@ func (p *SessionManager) SessionDestroy(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		userid = session.Value.(SessionStore).Get("id").(string)
+		userid = session.Value.(SessionStore).Get("id").(int64)
 		session.Value.(SessionStore).Release()
 	}
 
@@ -202,6 +202,6 @@ func GetSession(w http.ResponseWriter, r *http.Request) (session SessionStore, e
 	return defaultSessionManager.GetSession(w, r)
 }
 
-func SessionDestroy(w http.ResponseWriter, r *http.Request) (userid, sessionid string) {
+func SessionDestroy(w http.ResponseWriter, r *http.Request) (userid int64, sessionid string) {
 	return defaultSessionManager.SessionDestroy(w, r)
 }

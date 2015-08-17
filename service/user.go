@@ -28,11 +28,6 @@ type User struct {
 }
 
 func (p *User) AddUser() (e error) {
-	p.Id = genUserID()
-	if p.Id <= 0 {
-		return fmt.Errorf("用户ID空.")
-	}
-
 	if p.Cellphone == "" && p.Email == "" {
 		return fmt.Errorf("用户手机号和邮箱地址同时为空.")
 	}
@@ -40,15 +35,15 @@ func (p *User) AddUser() (e error) {
 		return fmt.Errorf("用户密码为空.")
 	}
 
-	if p.Cellphone != "" {
-		p.Cellphone = strings.ToLower(p.Cellphone)
-	}
-	if p.Email != "" {
-		p.Email = strings.ToLower(p.Email)
-	}
-
 	if e = validator.Validate(p); e != nil {
 		return
+	}
+
+	p.pretreat()
+
+	p.Id = genUserID()
+	if p.Id <= 0 {
+		return fmt.Errorf("用户ID空.")
 	}
 
 	p.encryPWD()
@@ -67,6 +62,8 @@ func (p *User) UpdateUser() (e error) {
 		return fmt.Errorf("只有用户昵称和密码可更新.")
 	}
 
+	p.pretreat()
+
 	if e = validator.Validate(p); e != nil {
 		return
 	}
@@ -78,7 +75,36 @@ func (p *User) UpdateUser() (e error) {
 	return p.toDao().Update()
 }
 
+func (p *User) Get() (has bool, e error) {
+	p.pretreat()
+
+	one := p.toDao()
+	has, e = one.GetOne()
+	if e != nil || has == false {
+		return
+	}
+
+	p.Id = one.Id
+	p.Cellphone = one.Cellphone
+	p.Email = one.Email
+	p.Nickname = one.Nickname
+	p.Password = one.Password
+
+	return true, nil
+}
+
 ////////
+func (p *User) pretreat() {
+	if p.Cellphone != "" {
+		p.Cellphone = strings.ToLower(p.Cellphone)
+	}
+	if p.Email != "" {
+		p.Email = strings.ToLower(p.Email)
+	}
+	if p.Nickname != "" {
+		p.Nickname = strings.ToLower(p.Nickname)
+	}
+}
 
 func (p *User) toDao() *dao.User {
 	return &dao.User{
@@ -92,12 +118,12 @@ func (p *User) toDao() *dao.User {
 
 func (p *User) encryPWD() {
 	if p.Password != "" {
-		p.Password = encryPWD(p.Id, p.Password)
+		p.Password = EncryPWD(p.Id, p.Password)
 	}
 }
 
 // 加密用户密码
-func encryPWD(userid int64, password string) string {
+func EncryPWD(userid int64, password string) string {
 	const SYS_PWD = "When you forgive, You love. And when you love, God's light shines on you."
 
 	return fmt.Sprintf("%x", sha1.Sum([]byte(fmt.Sprintf("%v%v%v", SYS_PWD, password, (userid/1986)>>4))))

@@ -10,9 +10,9 @@ var (
 )
 
 type ConfigServ struct {
-	Listen string `json:"listen"`
-	ServID string `json:"serv_id"`
-	DBs    []byte `json:"dbs"`
+	Listen string      `json:"listen"`
+	ServID string      `json:"serv_id"`
+	DBs    interface{} `json:"dbs"`
 }
 
 func InitPassportServ() error {

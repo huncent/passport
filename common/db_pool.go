@@ -11,7 +11,7 @@ var (
 	Xorms = make(map[string]*xorm.Engine)
 )
 
-func InitDbPool(conf []byte) (err error) {
+func InitDbPool(conf interface{}) (err error) {
 	var dbs []struct {
 		Name   string `json:"name"`
 		NGType string `json:"ng_type"`
@@ -19,7 +19,12 @@ func InitDbPool(conf []byte) (err error) {
 		DSN    string `json:"dsn"`
 	}
 
-	if err = json.Unmarshal(conf, dbs); err != nil {
+	var byteConf []byte
+	if byteConf, err = json.Marshal(conf); err != nil {
+		return
+	}
+
+	if err = json.Unmarshal(byteConf, &dbs); err != nil {
 		return
 	}
 
