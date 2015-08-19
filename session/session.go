@@ -4,6 +4,7 @@ import (
 	"container/list"
 	"crypto/rand"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -11,7 +12,7 @@ import (
 	"time"
 )
 
-var defaultSessionManager *SessionManager = NewSessionManager(nil)
+var defaultSessionManager *SessionManager = nil
 
 var stores = make(map[string]SessionStoreType)
 
@@ -55,24 +56,34 @@ type SessionManager struct {
 	Domain       string `json:"domain"`
 	StoreConfig  string `json:"store_config"`
 
-	sessions map[string]*list.Element
-	list     *list.List
-	lock     sync.RWMutex
+	sessions  map[string]*list.Element
+	list      *list.List
+	lock      sync.RWMutex
+	destroied bool
 }
 
 func NewSessionManager(sessionConfig interface{}) (m *SessionManager) {
-	m = &SessionManager{
-		StoreType:    "mem",
-		CookieName:   "gosessionid",
-		IdleTime:     10,
-		CookieExpire: 0,
-		sessions:     make(map[string]*list.Element),
-		list:         list.New(),
+	if sessionConfig == nil {
+		return nil
 	}
 
+	m = &SessionManager{}
+
+	var byteConf []byte
+	var err error
+	if byteConf, err = json.Marshal(sessionConfig); err != nil {
+		return nil
+	}
+
+	if err = json.Unmarshal(byteConf, m); err != nil {
+		return nil
+	}
+
+	m.sessions = make(map[string]*list.Element)
+	m.list = list.New()
 	m.gc()
 
-	return
+	return m
 }
 
 func (p *SessionManager) GetSession(w http.ResponseWriter, r *http.Request) (session SessionStore, err error) {
@@ -131,6 +142,12 @@ func (p *SessionManager) GetSession(w http.ResponseWriter, r *http.Request) (ses
 	return
 }
 
+func (p *SessionManager) Destroy() {
+	p.sessions = nil
+	p.list = nil
+	p.destroied = true
+}
+
 func (p *SessionManager) SessionDestroy(w http.ResponseWriter, r *http.Request) (userid int64, sessionid string) {
 	cookie, err := r.Cookie(p.CookieName)
 	if err != nil || cookie.Value == "" {
@@ -169,9 +186,9 @@ func (p *SessionManager) sessionId() (string, error) {
 }
 
 func (p *SessionManager) gc() {
-	var sleep int64 = 3
+	var sleep int64 = 10
 
-	for {
+	for p.destroied == false {
 		var element *list.Element
 
 		p.lock.RLock()
@@ -194,10 +211,21 @@ func (p *SessionManager) gc() {
 		p.lock.Unlock()
 	}
 
-	time.AfterFunc(time.Duration(sleep)*time.Second, p.gc)
+	if p.destroied == false {
+		time.AfterFunc(time.Duration(sleep)*time.Second, p.gc)
+	}
 }
 
 // 公开接口
+func InitDefaultSessionManager(conf interface{}) *SessionManager {
+	if defaultSessionManager != nil {
+		defaultSessionManager.Destroy()
+	}
+
+	defaultSessionManager = NewSessionManager(conf)
+	return defaultSessionManager
+}
+
 func GetSession(w http.ResponseWriter, r *http.Request) (session SessionStore, err error) {
 	return defaultSessionManager.GetSession(w, r)
 }

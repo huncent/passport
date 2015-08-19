@@ -2,7 +2,10 @@ package common
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
+
+	"github.com/liuhengloveyou/passport/session"
 )
 
 var (
@@ -10,9 +13,10 @@ var (
 )
 
 type ConfigServ struct {
-	Listen string      `json:"listen"`
-	ServID string      `json:"serv_id"`
-	DBs    interface{} `json:"dbs"`
+	Listen  string      `json:"listen"`
+	ServID  string      `json:"serv_id"`
+	DBs     interface{} `json:"dbs"`
+	Session interface{} `json:"session"`
 }
 
 func InitPassportServ() error {
@@ -22,6 +26,10 @@ func InitPassportServ() error {
 
 	if e := InitDbPool(ServConfig.DBs); e != nil {
 		return e
+	}
+
+	if nil == session.InitDefaultSessionManager(ServConfig.Session) {
+		return fmt.Errorf("InitDefaultSessionManager err.")
 	}
 
 	return nil

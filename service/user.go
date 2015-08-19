@@ -85,10 +85,18 @@ func (p *User) Get() (has bool, e error) {
 	}
 
 	p.Id = one.Id
-	p.Cellphone = one.Cellphone
-	p.Email = one.Email
-	p.Nickname = one.Nickname
-	p.Password = one.Password
+	if one.Cellphone != nil {
+		p.Cellphone = *one.Cellphone
+	}
+	if one.Email != nil {
+		p.Email = *one.Email
+	}
+	if one.Nickname != nil {
+		p.Nickname = *one.Nickname
+	}
+	if one.Password != nil {
+		p.Password = *one.Password
+	}
 
 	return true, nil
 }
@@ -101,19 +109,24 @@ func (p *User) pretreat() {
 	if p.Email != "" {
 		p.Email = strings.ToLower(p.Email)
 	}
-	if p.Nickname != "" {
-		p.Nickname = strings.ToLower(p.Nickname)
-	}
 }
 
 func (p *User) toDao() *dao.User {
-	return &dao.User{
-		Id:        p.Id,
-		Cellphone: p.Cellphone,
-		Email:     p.Email,
-		Nickname:  p.Nickname,
-		Password:  p.Password,
+	dao := &dao.User{Id: p.Id}
+	if p.Cellphone != "" {
+		dao.Cellphone = &p.Cellphone
 	}
+	if p.Email != "" {
+		dao.Email = &p.Email
+	}
+	if p.Nickname != "" {
+		dao.Nickname = &p.Nickname
+	}
+	if p.Password != "" {
+		dao.Password = &p.Password
+	}
+
+	return dao
 }
 
 func (p *User) encryPWD() {

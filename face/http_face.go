@@ -119,6 +119,14 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 	user := &service.User{}
 	if sess.Get("id") != nil {
 		user.Id = sess.Get("id").(int64)
+		if sess.Get("cellphone") != nil {
+			user.Cellphone = sess.Get("cellphone").(string)
+		} else if sess.Get("email") != nil {
+			user.Email = sess.Get("email").(string)
+		} else if sess.Get("nickname") != nil {
+			user.Nickname = sess.Get("nickname").(string)
+		}
+
 		resp, _ := json.Marshal(user)
 		gocommon.HttpErr(w, http.StatusOK, resp)
 		log.Warning("login again:", user)
@@ -133,7 +141,7 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Infoln(string(body))
 
-	err = json.Unmarshal(body, &user)
+	err = json.Unmarshal(body, user)
 	if err != nil {
 		gocommon.HttpErr(w, http.StatusBadRequest, []byte(err.Error()))
 		log.Errorln("json.Unmarshal(body, user) ERR: ", err)
@@ -210,6 +218,7 @@ func UserAuth(w http.ResponseWriter, r *http.Request) {
 
 	if sess.Get("id") == nil {
 		gocommon.HttpErr(w, http.StatusForbidden, []byte("{}"))
+		log.Errorln("session no id:", sess)
 		return
 	}
 
