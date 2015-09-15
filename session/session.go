@@ -49,12 +49,12 @@ func newSessionStore(typeName string, config interface{}) (SessionStore, error) 
 
 ////
 type SessionManager struct {
-	StoreType    string `json:"store_type"`
-	CookieName   string `json:"cookie_name"`
-	IdleTime     int64  `json:"idle_time"`
-	CookieExpire int    `json:"cookie_expire"`
-	Domain       string `json:"domain"`
-	StoreConfig  string `json:"store_config"`
+	StoreType    string      `json:"store_type"`
+	CookieName   string      `json:"cookie_name"`
+	IdleTime     int64       `json:"idle_time"`
+	CookieExpire int         `json:"cookie_expire"`
+	Domain       string      `json:"domain"`
+	StoreConfig  interface{} `json:"store_config"`
 
 	sessions  map[string]*list.Element
 	list      *list.List
@@ -84,6 +84,35 @@ func NewSessionManager(sessionConfig interface{}) (m *SessionManager) {
 	m.gc()
 
 	return m
+}
+
+func (p *SessionManager) GetSessionById(sessionid string) (session SessionStore, err error) {
+	if sessionid == "" {
+		if sessionid, err = p.sessionId(); err != nil {
+			return nil, err
+		}
+	}
+
+	if sess, ok := p.sessions[sessionid]; ok {
+		session = sess.Value.(SessionStore)
+		p.lock.Lock()
+		p.list.MoveToBack(sess)
+		p.lock.Unlock()
+		return
+	}
+
+	// 新会话
+	session, err = newSessionStore(p.StoreType, p.StoreConfig)
+	if err != nil {
+		return
+	}
+	session.Id(sessionid)
+
+	p.lock.Lock()
+	p.sessions[sessionid] = p.list.PushBack(session)
+	p.lock.Unlock()
+
+	return
 }
 
 func (p *SessionManager) GetSession(w http.ResponseWriter, r *http.Request) (session SessionStore, err error) {

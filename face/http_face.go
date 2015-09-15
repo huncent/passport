@@ -41,7 +41,7 @@ func UserAdd(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		log.Errorln("ioutil.ReadAll(r.Body) ERR: ", err)
-		gocommon.HttpErr(w, http.StatusBadRequest, []byte(err.Error()))
+		gocommon.HttpErr(w, http.StatusBadRequest, err.Error())
 		return
 
 	}
@@ -51,19 +51,19 @@ func UserAdd(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(body, user)
 	if err != nil {
 		log.Errorln("json.Unmarshal(body, user) ERR: ", err)
-		gocommon.HttpErr(w, http.StatusBadRequest, []byte(err.Error()))
+		gocommon.HttpErr(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	err = user.AddUser()
 	if err != nil {
 		log.Errorln("user.AddUser() ERR: ", err)
-		gocommon.HttpErr(w, http.StatusInternalServerError, []byte(err.Error()))
+		gocommon.HttpErr(w, http.StatusInternalServerError, err.Error())
 		return
 
 	}
 
-	gocommon.HttpErr(w, http.StatusOK, nil)
+	gocommon.HttpErr(w, http.StatusOK, "OK")
 	return
 }
 
@@ -71,12 +71,12 @@ func UserModify(w http.ResponseWriter, r *http.Request) {
 	//只有登录用户有权修改信息
 	sess, err := session.GetSession(w, r)
 	if err != nil {
-		gocommon.HttpErr(w, http.StatusInternalServerError, []byte(err.Error()))
+		gocommon.HttpErr(w, http.StatusInternalServerError, err.Error())
 		log.Errorln(err.Error())
 		return
 	}
 	if sess.Get("id") == nil {
-		gocommon.HttpErr(w, http.StatusForbidden, []byte("用户末登录."))
+		gocommon.HttpErr(w, http.StatusForbidden, "用户末登录.")
 		log.Warning("update no login:", sess)
 		return
 	}
@@ -84,7 +84,7 @@ func UserModify(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		log.Errorln("ioutil.ReadAll(r.Body) ERR: ", err)
-		gocommon.HttpErr(w, http.StatusBadRequest, []byte(err.Error()))
+		gocommon.HttpErr(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -92,18 +92,18 @@ func UserModify(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(body, user)
 	if err != nil {
 		log.Errorln("json.Unmarshal(body, user) ERR: ", err)
-		gocommon.HttpErr(w, http.StatusBadRequest, []byte(err.Error()))
+		gocommon.HttpErr(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	err = user.UpdateUser()
 	if err != nil {
 		log.Errorln(*user, err)
-		gocommon.HttpErr(w, http.StatusInternalServerError, []byte(err.Error()))
+		gocommon.HttpErr(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	gocommon.HttpErr(w, http.StatusOK, nil)
+	gocommon.HttpErr(w, http.StatusOK, "OK")
 	return
 
 }
@@ -111,7 +111,7 @@ func UserModify(w http.ResponseWriter, r *http.Request) {
 func UserLogin(w http.ResponseWriter, r *http.Request) {
 	sess, err := session.GetSession(w, r)
 	if err != nil {
-		gocommon.HttpErr(w, http.StatusInternalServerError, []byte(err.Error()))
+		gocommon.HttpErr(w, http.StatusInternalServerError, err.Error())
 		log.Errorln(err.Error())
 		return
 	}
@@ -128,14 +128,14 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 		}
 
 		resp, _ := json.Marshal(user)
-		gocommon.HttpErr(w, http.StatusOK, resp)
+		gocommon.HttpErr(w, http.StatusOK, string(resp))
 		log.Warning("login again:", user)
 		return // 已经登录
 	}
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		gocommon.HttpErr(w, http.StatusBadRequest, []byte(err.Error()))
+		gocommon.HttpErr(w, http.StatusBadRequest, err.Error())
 		log.Errorln("ioutil.ReadAll(r.Body) ERR: ", err)
 		return
 	}
@@ -143,7 +143,7 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 
 	err = json.Unmarshal(body, user)
 	if err != nil {
-		gocommon.HttpErr(w, http.StatusBadRequest, []byte(err.Error()))
+		gocommon.HttpErr(w, http.StatusBadRequest, err.Error())
 		log.Errorln("json.Unmarshal(body, user) ERR: ", err)
 		return
 	}
@@ -160,26 +160,26 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 		mUser.Nickname = user.Nickname
 		sess.Set("nickname", user.Nickname)
 	} else {
-		gocommon.HttpErr(w, http.StatusBadRequest, []byte("用户标识为空."))
+		gocommon.HttpErr(w, http.StatusBadRequest, "用户标识为空.")
 		log.Errorln("用户标识为空.")
 		return
 	}
 
 	has, err := mUser.Get()
 	if err != nil {
-		gocommon.HttpErr(w, http.StatusInternalServerError, []byte(err.Error()))
+		gocommon.HttpErr(w, http.StatusInternalServerError, err.Error())
 		log.Errorln(*user, err)
 		return
 	}
 	if false == has {
-		gocommon.HttpErr(w, http.StatusForbidden, []byte("用户不存在."))
+		gocommon.HttpErr(w, http.StatusForbidden, "用户不存在.")
 		log.Warningln(user, "用户不存在.")
 		return
 	}
 
 	loginPWD := service.EncryPWD(mUser.Id, user.Password)
 	if loginPWD != mUser.Password {
-		gocommon.HttpErr(w, http.StatusForbidden, []byte("用户密码不正确."))
+		gocommon.HttpErr(w, http.StatusForbidden, "用户密码不正确.")
 		log.Warningln(*user, *mUser, "用户密码不正确.")
 		return
 
@@ -189,7 +189,7 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 	sess.Set("password", mUser.Password)
 	log.Infoln(sess)
 
-	gocommon.HttpErr(w, http.StatusOK, []byte("OK"))
+	gocommon.HttpErr(w, http.StatusOK, "OK")
 
 	return
 }
@@ -199,9 +199,9 @@ func UserLogout(w http.ResponseWriter, r *http.Request) {
 	log.Infoln(uid, sid)
 
 	if uid != 0 && sid != "" {
-		gocommon.HttpErr(w, http.StatusOK, []byte("OK"))
+		gocommon.HttpErr(w, http.StatusOK, "OK")
 	} else {
-		gocommon.HttpErr(w, http.StatusOK, []byte("ERR"))
+		gocommon.HttpErr(w, http.StatusOK, "ERR")
 	}
 
 	return
@@ -210,14 +210,14 @@ func UserLogout(w http.ResponseWriter, r *http.Request) {
 func UserAuth(w http.ResponseWriter, r *http.Request) {
 	sess, err := session.GetSession(w, r)
 	if err != nil {
-		gocommon.HttpErr(w, http.StatusInternalServerError, []byte(err.Error()))
+		gocommon.HttpErr(w, http.StatusInternalServerError, err.Error())
 		log.Warningln(err.Error())
 		return
 	}
 	log.Info(sess)
 
 	if sess.Get("id") == nil {
-		gocommon.HttpErr(w, http.StatusForbidden, []byte("{}"))
+		gocommon.HttpErr(w, http.StatusForbidden, "{}")
 		log.Errorln("session no id:", sess)
 		return
 	}
@@ -239,7 +239,7 @@ func UserAuth(w http.ResponseWriter, r *http.Request) {
 
 	user, _ := json.Marshal(mUser)
 
-	gocommon.HttpErr(w, http.StatusOK, user)
+	gocommon.HttpErr(w, http.StatusOK, string(user))
 
 	return
 }
