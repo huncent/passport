@@ -152,11 +152,10 @@ func (p *SessionManager) GetSession(w http.ResponseWriter, r *http.Request) (ses
 
 	if writeCookie == true {
 		cookie = &http.Cookie{
-			Name:     p.CookieName,
-			Value:    url.QueryEscape(sid),
-			Path:     "/",
-			HttpOnly: true,
-			Domain:   p.Domain,
+			Name:   p.CookieName,
+			Value:  url.QueryEscape(sid),
+			Path:   "/",
+			Domain: p.Domain,
 		}
 
 		if p.CookieExpire >= 0 {

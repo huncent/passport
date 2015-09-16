@@ -1,16 +1,17 @@
 {
-	"domain": "passport.com",
+	"domain": "passport.xim.com",
 	"listen": ":8080",
 	"serv_id": "6",
 	"dbs":[{
 		"name": "passport",
 		"ng_type": "xorm",
 		"db_type": "mysql",
-		"dsn": "root:lh@tcp(192.168.59.103:3306)/passport?charset=utf8"
+		"dsn": "root:root@tcp(127.0.0.1:3306)/passport?charset=utf8"
 	}],
 	"session":{
+		"domain": "xim.com",
 		"store_type": "mem",
-		"cookie_name": "passportsessionid",
+		"cookie_name": "ximsessionid",
 		"idle_time": 259200,
 		"cookie_expire": 259200
 	}

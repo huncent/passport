@@ -54,11 +54,12 @@ func UserAdd(w http.ResponseWriter, r *http.Request) {
 		gocommon.HttpErr(w, http.StatusBadRequest, err.Error())
 		return
 	}
+	log.Infoln(*user)
 
 	err = user.AddUser()
 	if err != nil {
 		log.Errorln("user.AddUser() ERR: ", err)
-		gocommon.HttpErr(w, http.StatusInternalServerError, err.Error())
+		gocommon.HttpErr(w, http.StatusInternalServerError, "服务错误.")
 		return
 
 	}
