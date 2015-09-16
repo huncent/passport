@@ -258,6 +258,10 @@ func GetSession(w http.ResponseWriter, r *http.Request) (session SessionStore, e
 	return defaultSessionManager.GetSession(w, r)
 }
 
+func GetSessionById(sid string) (session SessionStore, err error) {
+	return defaultSessionManager.GetSessionById(sid)
+}
+
 func SessionDestroy(w http.ResponseWriter, r *http.Request) (userid int64, sessionid string) {
 	return defaultSessionManager.SessionDestroy(w, r)
 }
