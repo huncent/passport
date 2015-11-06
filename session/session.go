@@ -20,10 +20,11 @@ type SessionStoreType func(interface{}) (SessionStore, error)
 
 type SessionStore interface {
 	Id(string) string
+	Active() int64
+	Keys() []interface{}
 	Get(key interface{}) interface{}
 	Set(key, val interface{}) error
 	Delete(key interface{}) error
-	Active() int64
 	Release()
 }
 
@@ -86,14 +87,18 @@ func NewSessionManager(sessionConfig interface{}) (m *SessionManager) {
 	return m
 }
 
-func (p *SessionManager) GetSessionById(sessionid string) (session SessionStore, err error) {
-	if sessionid == "" {
-		if sessionid, err = p.sessionId(); err != nil {
+func (p *SessionManager) GetSessionById(sessionid *string) (session SessionStore, err error) {
+	sid := ""
+
+	if sessionid == nil {
+		if sid, err = p.sessionId(); err != nil {
 			return nil, err
 		}
+	} else {
+		sid = *sessionid
 	}
 
-	if sess, ok := p.sessions[sessionid]; ok {
+	if sess, ok := p.sessions[sid]; ok {
 		session = sess.Value.(SessionStore)
 		p.lock.Lock()
 		p.list.MoveToBack(sess)
@@ -106,27 +111,30 @@ func (p *SessionManager) GetSessionById(sessionid string) (session SessionStore,
 	if err != nil {
 		return
 	}
-	session.Id(sessionid)
+	session.Id(sid)
 
 	p.lock.Lock()
-	p.sessions[sessionid] = p.list.PushBack(session)
+	p.sessions[sid] = p.list.PushBack(session)
 	p.lock.Unlock()
 
 	return
 }
 
-func (p *SessionManager) GetSession(w http.ResponseWriter, r *http.Request) (session SessionStore, err error) {
-	sid := ""
+func (p *SessionManager) GetSession(w http.ResponseWriter, r *http.Request, sessionid *string) (session SessionStore, err error) {
 	writeCookie := false
+	sid := ""
 
 	cookie, errs := r.Cookie(p.CookieName)
 	if errs != nil || cookie.Value == "" {
-		sid, err = p.sessionId()
+		if sessionid == nil {
+			sid, err = p.sessionId()
+		} else {
+			sid = *sessionid
+		}
 		writeCookie = true
 	} else {
 		sid, err = url.QueryUnescape(cookie.Value)
 	}
-
 	if err != nil {
 		return
 	}
@@ -254,12 +262,12 @@ func InitDefaultSessionManager(conf interface{}) *SessionManager {
 	return defaultSessionManager
 }
 
-func GetSession(w http.ResponseWriter, r *http.Request) (session SessionStore, err error) {
-	return defaultSessionManager.GetSession(w, r)
+func GetSession(w http.ResponseWriter, r *http.Request, sessionid *string) (session SessionStore, err error) {
+	return defaultSessionManager.GetSession(w, r, sessionid)
 }
 
-func GetSessionById(sid string) (session SessionStore, err error) {
-	return defaultSessionManager.GetSessionById(sid)
+func GetSessionById(sessionid *string) (session SessionStore, err error) {
+	return defaultSessionManager.GetSessionById(sessionid)
 }
 
 func SessionDestroy(w http.ResponseWriter, r *http.Request) (userid int64, sessionid string) {

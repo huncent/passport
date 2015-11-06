@@ -50,6 +50,21 @@ func (p *MemSessionStore) Delete(key interface{}) error {
 	return nil
 }
 
+func (p *MemSessionStore) Keys() (keys []interface{}) {
+	i := 0
+	keys = make([]interface{}, len(p.data))
+
+	for k, _ := range p.data {
+		keys[i] = k
+		i--
+		if i < 0 {
+			break
+		}
+	}
+
+	return
+}
+
 func (p *MemSessionStore) Active() int64 {
 	return p.active
 }
