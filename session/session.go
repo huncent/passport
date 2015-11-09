@@ -114,6 +114,7 @@ func (p *SessionManager) GetSession(w http.ResponseWriter, r *http.Request, sess
 
 	if sess, ok := p.sessions[sid]; ok {
 		session = sess.Value.(SessionStore)
+		session.Active(true)
 		p.lock.Lock()
 		p.list.MoveToBack(sess)
 		p.lock.Unlock()
@@ -186,6 +187,7 @@ func (p *SessionManager) GetSessionById(sessionid *string) (session SessionStore
 
 	if sess, ok := p.sessions[sid]; ok {
 		session = sess.Value.(SessionStore)
+		session.Active(true)
 		p.lock.Lock()
 		p.list.MoveToBack(sess)
 		p.lock.Unlock()
@@ -229,7 +231,9 @@ func (p *SessionManager) Destroy() {
 }
 
 func (p *SessionManager) SetPrepireRelease(pf PrepireReleaseFunc) {
+	p.lock.Lock()
 	p.prepireRelease = pf
+	p.lock.Unlock()
 }
 
 func (p *SessionManager) sessionId() (string, error) {
