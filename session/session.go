@@ -20,7 +20,7 @@ var (
 	stores = make(map[string]SessionStoreType)
 )
 
-type PrepireReleaseFunc func(interface{})
+type PrepireReleaseFunc func(SessionStore)
 type SessionStoreType func(interface{}) (SessionStore, error)
 
 type SessionStore interface {
@@ -42,12 +42,11 @@ type SessionManager struct {
 	CookieExpire int         `json:"cookie_expire"`
 	StoreConfig  interface{} `json:"store_config"`
 
-	PrepireRelease PrepireReleaseFunc // 会话过期时的回调
-
-	sessions  map[string]*list.Element
-	list      *list.List
-	lock      sync.RWMutex
-	destroied bool
+	prepireRelease PrepireReleaseFunc // 会话过期时的回调
+	sessions       map[string]*list.Element
+	list           *list.List
+	lock           sync.RWMutex
+	destroied      bool
 }
 
 func RegisterSessionStore(name string, one SessionStoreType) {
@@ -229,6 +228,10 @@ func (p *SessionManager) Destroy() {
 	p.destroied = true
 }
 
+func (p *SessionManager) SetPrepireRelease(pf PrepireReleaseFunc) {
+	p.prepireRelease = pf
+}
+
 func (p *SessionManager) sessionId() (string, error) {
 	b := make([]byte, 24)
 	n, err := rand.Read(b)
@@ -260,8 +263,8 @@ func (p *SessionManager) gc() {
 
 		log.Warningln("sessionrelease:", element.Value.(SessionStore).Id(""))
 		p.lock.Lock()
-		if p.PrepireRelease != nil {
-			p.PrepireRelease(element.Value.(SessionStore).Id(""))
+		if p.prepireRelease != nil {
+			p.prepireRelease(element.Value.(SessionStore))
 		}
 		element.Value.(SessionStore).Release()
 		delete(p.sessions, element.Value.(SessionStore).Id(""))
@@ -274,7 +277,9 @@ func (p *SessionManager) gc() {
 	}
 }
 
+////////////////////////////////////////////////////////////////////////////////
 // 公开接口
+////////////////////////////////////////////////////////////////////////////////
 func InitDefaultSessionManager(conf interface{}) *SessionManager {
 	if defaultSessionManager != nil {
 		defaultSessionManager.Destroy()
@@ -302,4 +307,8 @@ func SessionDestroyById(sid string) {
 
 func SessionUpdate(sid string) {
 	defaultSessionManager.SessionUpdate(sid)
+}
+
+func SetPrepireRelease(pf PrepireReleaseFunc) {
+	defaultSessionManager.SetPrepireRelease(pf)
 }

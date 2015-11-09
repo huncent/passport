@@ -49,7 +49,12 @@ func TestSessionKeys(t *testing.T) {
 
 func TestSessionGC(t *testing.T) {
 
+	pf := func(sess session.SessionStore) {
+		t.Log("PrepireRelease:", sess)
+	}
+
 	session.InitDefaultSessionManager(conf)
+	session.SetPrepireRelease(pf)
 	key := "demo"
 	sess, _ := session.GetSessionById(&key)
 
