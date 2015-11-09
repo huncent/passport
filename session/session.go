@@ -14,20 +14,40 @@ import (
 	log "github.com/golang/glog"
 )
 
-var defaultSessionManager *SessionManager = nil
+var (
+	defaultSessionManager *SessionManager = nil
 
-var stores = make(map[string]SessionStoreType)
+	stores = make(map[string]SessionStoreType)
+)
 
+type PrepireReleaseFunc func(interface{})
 type SessionStoreType func(interface{}) (SessionStore, error)
 
 type SessionStore interface {
 	Id(string) string
 	Active(set bool) int64
+	Keys() []interface{}
 	Get(key interface{}) interface{}
 	Set(key, val interface{}) error
-	Keys() []interface{}
 	Delete(key interface{}) error
 	Release()
+}
+
+////
+type SessionManager struct {
+	Domain       string      `json:"domain"`
+	StoreType    string      `json:"store_type"`
+	CookieName   string      `json:"cookie_name"`
+	IdleTime     int64       `json:"idle_time"`
+	CookieExpire int         `json:"cookie_expire"`
+	StoreConfig  interface{} `json:"store_config"`
+
+	PrepireRelease PrepireReleaseFunc // 会话过期时的回调
+
+	sessions  map[string]*list.Element
+	list      *list.List
+	lock      sync.RWMutex
+	destroied bool
 }
 
 func RegisterSessionStore(name string, one SessionStoreType) {
@@ -48,21 +68,6 @@ func newSessionStore(typeName string, config interface{}) (SessionStore, error) 
 	}
 
 	return nil, fmt.Errorf("No SessionManager types " + typeName)
-}
-
-////
-type SessionManager struct {
-	StoreType    string      `json:"store_type"`
-	CookieName   string      `json:"cookie_name"`
-	IdleTime     int64       `json:"idle_time"`
-	CookieExpire int         `json:"cookie_expire"`
-	Domain       string      `json:"domain"`
-	StoreConfig  interface{} `json:"store_config"`
-
-	sessions  map[string]*list.Element
-	list      *list.List
-	lock      sync.RWMutex
-	destroied bool
 }
 
 func NewSessionManager(sessionConfig interface{}) (m *SessionManager) {
@@ -87,39 +92,6 @@ func NewSessionManager(sessionConfig interface{}) (m *SessionManager) {
 	m.gc()
 
 	return m
-}
-
-func (p *SessionManager) GetSessionById(sessionid *string) (session SessionStore, err error) {
-	sid := ""
-
-	if sessionid == nil {
-		if sid, err = p.sessionId(); err != nil {
-			return nil, err
-		}
-	} else {
-		sid = *sessionid
-	}
-
-	if sess, ok := p.sessions[sid]; ok {
-		session = sess.Value.(SessionStore)
-		p.lock.Lock()
-		p.list.MoveToBack(sess)
-		p.lock.Unlock()
-		return
-	}
-
-	// 新会话
-	session, err = newSessionStore(p.StoreType, p.StoreConfig)
-	if err != nil {
-		return
-	}
-	session.Id(sid)
-
-	p.lock.Lock()
-	p.sessions[sid] = p.list.PushBack(session)
-	p.lock.Unlock()
-
-	return
 }
 
 func (p *SessionManager) GetSession(w http.ResponseWriter, r *http.Request, sessionid *string) (session SessionStore, err error) {
@@ -180,13 +152,7 @@ func (p *SessionManager) GetSession(w http.ResponseWriter, r *http.Request, sess
 	return
 }
 
-func (p *SessionManager) Destroy() {
-	p.sessions = nil
-	p.list = nil
-	p.destroied = true
-}
-
-func (p *SessionManager) SessionDestroy(w http.ResponseWriter, r *http.Request) (userid int64, sessionid string) {
+func (p *SessionManager) SessionDestroy(w http.ResponseWriter, r *http.Request) (sessionid string) {
 	cookie, err := r.Cookie(p.CookieName)
 	if err != nil || cookie.Value == "" {
 		return
@@ -195,11 +161,6 @@ func (p *SessionManager) SessionDestroy(w http.ResponseWriter, r *http.Request) 
 	sessionid, _ = url.QueryUnescape(cookie.Value)
 
 	if session, ok := p.sessions[sessionid]; ok {
-		if session.Value.(SessionStore).Get("id") == nil {
-			return
-		}
-
-		userid = session.Value.(SessionStore).Get("id").(int64)
 		session.Value.(SessionStore).Release()
 	}
 
@@ -211,6 +172,61 @@ func (p *SessionManager) SessionDestroy(w http.ResponseWriter, r *http.Request) 
 		MaxAge:   -1})
 
 	return
+}
+
+func (p *SessionManager) GetSessionById(sessionid *string) (session SessionStore, err error) {
+	sid := ""
+
+	if sessionid == nil {
+		if sid, err = p.sessionId(); err != nil {
+			return nil, err
+		}
+	} else {
+		sid = *sessionid
+	}
+
+	if sess, ok := p.sessions[sid]; ok {
+		session = sess.Value.(SessionStore)
+		p.lock.Lock()
+		p.list.MoveToBack(sess)
+		p.lock.Unlock()
+		return
+	}
+
+	// 新会话
+	session, err = newSessionStore(p.StoreType, p.StoreConfig)
+	if err != nil {
+		return
+	}
+	session.Id(sid)
+
+	p.lock.Lock()
+	p.sessions[sid] = p.list.PushBack(session)
+	p.lock.Unlock()
+
+	return
+}
+
+func (p *SessionManager) SessionDestroyById(sid string) {
+	if session, ok := p.sessions[sid]; ok {
+		session.Value.(SessionStore).Release()
+	}
+}
+
+func (p *SessionManager) SessionUpdate(sid string) {
+	if sess, ok := p.sessions[sid]; ok {
+		sess.Value.(SessionStore).Active(true)
+		p.lock.Lock()
+		p.list.MoveToBack(sess)
+		p.lock.Unlock()
+		return
+	}
+}
+
+func (p *SessionManager) Destroy() {
+	p.sessions = nil
+	p.list = nil
+	p.destroied = true
 }
 
 func (p *SessionManager) sessionId() (string, error) {
@@ -244,6 +260,9 @@ func (p *SessionManager) gc() {
 
 		log.Warningln("sessionrelease:", element.Value.(SessionStore).Id(""))
 		p.lock.Lock()
+		if p.PrepireRelease != nil {
+			p.PrepireRelease(element.Value.(SessionStore).Id(""))
+		}
 		element.Value.(SessionStore).Release()
 		delete(p.sessions, element.Value.(SessionStore).Id(""))
 		p.list.Remove(element)
@@ -273,6 +292,14 @@ func GetSessionById(sessionid *string) (session SessionStore, err error) {
 	return defaultSessionManager.GetSessionById(sessionid)
 }
 
-func SessionDestroy(w http.ResponseWriter, r *http.Request) (userid int64, sessionid string) {
+func SessionDestroy(w http.ResponseWriter, r *http.Request) (sessionid string) {
 	return defaultSessionManager.SessionDestroy(w, r)
+}
+
+func SessionDestroyById(sid string) {
+	defaultSessionManager.SessionDestroyById(sid)
+}
+
+func SessionUpdate(sid string) {
+	defaultSessionManager.SessionUpdate(sid)
 }

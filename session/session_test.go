@@ -10,8 +10,8 @@ import (
 var conf map[string]interface{} = map[string]interface{}{
 	"store_type":    "mem",
 	"cookie_name":   "passportsessionid",
-	"idle_time":     86400,
-	"cookie_expire": 86400,
+	"idle_time":     10,
+	"cookie_expire": 10,
 }
 
 func TestSession(t *testing.T) {
@@ -38,11 +38,29 @@ func TestSessionKeys(t *testing.T) {
 	sess.Set("bb", "bbb")
 
 	data := sess.Keys()
-	t.Log("dump1:", data)
+	t.Log("keys1:", data)
 
 	sess.Set("ccc", "ccc")
 	sess.Set("ddd", "ddd")
 	sess.Delete("aa")
 
-	t.Log("dump2:", data)
+	t.Log("keys2:", data)
+}
+
+func TestSessionGC(t *testing.T) {
+
+	session.InitDefaultSessionManager(conf)
+	key := "demo"
+	sess, _ := session.GetSessionById(&key)
+
+	sess.Set("aa", "aaa")
+	sess.Set("bb", "bbb")
+
+	time.Sleep(6 * time.Second)
+	t.Log("aa:", sess.Get("aa"))
+	t.Log("bb:", sess.Get("bb"))
+
+	time.Sleep(6 * time.Second)
+	t.Log("aa:", sess.Get("aa"))
+	t.Log("bb:", sess.Get("bb"))
 }
