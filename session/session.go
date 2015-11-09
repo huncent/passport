@@ -10,6 +10,8 @@ import (
 	"net/url"
 	"sync"
 	"time"
+
+	log "github.com/golang/glog"
 )
 
 var defaultSessionManager *SessionManager = nil
@@ -20,10 +22,10 @@ type SessionStoreType func(interface{}) (SessionStore, error)
 
 type SessionStore interface {
 	Id(string) string
-	Active() int64
-	Keys() []interface{}
+	Active(set bool) int64
 	Get(key interface{}) interface{}
 	Set(key, val interface{}) error
+	Keys() []interface{}
 	Delete(key interface{}) error
 	Release()
 }
@@ -233,13 +235,14 @@ func (p *SessionManager) gc() {
 			break
 		}
 
-		if (element.Value.(SessionStore).Active() + p.IdleTime) > time.Now().Unix() {
-			sleep = (element.Value.(SessionStore).Active() + int64(p.IdleTime)) - time.Now().Unix()
+		if (element.Value.(SessionStore).Active(false) + p.IdleTime) > time.Now().Unix() {
+			sleep = (element.Value.(SessionStore).Active(false) + int64(p.IdleTime)) - time.Now().Unix()
 			p.lock.RUnlock()
 			break
 		}
 		p.lock.RUnlock()
 
+		log.Warningln("sessionrelease:", element.Value.(SessionStore).Id(""))
 		p.lock.Lock()
 		element.Value.(SessionStore).Release()
 		delete(p.sessions, element.Value.(SessionStore).Id(""))

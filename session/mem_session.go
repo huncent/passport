@@ -21,8 +21,6 @@ func (p *MemSessionStore) Id(id string) string {
 }
 
 func (p *MemSessionStore) Set(key, val interface{}) error {
-	p.active = time.Now().Unix()
-
 	p.lock.Lock()
 	p.data[key] = val
 	p.lock.Unlock()
@@ -30,19 +28,15 @@ func (p *MemSessionStore) Set(key, val interface{}) error {
 	return nil
 }
 
-func (p *MemSessionStore) Get(key interface{}) interface{} {
-	p.active = time.Now().Unix()
-
+func (p *MemSessionStore) Get(key interface{}) (v interface{}) {
 	p.lock.RLock()
-	defer p.lock.RUnlock()
+	v = p.data[key]
+	p.lock.RUnlock()
 
-	return p.data[key]
-
+	return
 }
 
 func (p *MemSessionStore) Delete(key interface{}) error {
-	p.active = time.Now().Unix()
-
 	p.lock.Lock()
 	delete(p.data, key)
 	p.lock.Unlock()
@@ -50,23 +44,30 @@ func (p *MemSessionStore) Delete(key interface{}) error {
 	return nil
 }
 
-func (p *MemSessionStore) Keys() (keys []interface{}) {
-	i := 0
-	keys = make([]interface{}, len(p.data))
+func (p *MemSessionStore) Keys() []interface{} {
+	len := len(p.data)
+	tmp := make([]interface{}, len)
 
+	p.lock.RLock()
 	for k, _ := range p.data {
-		keys[i] = k
-		i--
-		if i < 0 {
-			break
-		}
+		len--
+		tmp[len] = k
+	}
+	p.lock.RUnlock()
+
+	return tmp
+}
+
+func (p *MemSessionStore) Active(set bool) (val int64) {
+	val = p.active
+
+	if set {
+		p.lock.Lock()
+		p.active = time.Now().Unix()
+		p.lock.Unlock()
 	}
 
 	return
-}
-
-func (p *MemSessionStore) Active() int64 {
-	return p.active
 }
 
 func (p *MemSessionStore) Release() {
