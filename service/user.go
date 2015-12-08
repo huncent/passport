@@ -13,10 +13,10 @@ import (
 	"github.com/liuhengloveyou/validator"
 )
 
-var gid *gocommon.GlobalID
+var gid *gocommon.GlobalID = &gocommon.GlobalID{Expand: common.ServConfig.ServID}
 
 func init() {
-	gid = &gocommon.GlobalID{ServID: common.ServConfig.ServID}
+	return
 }
 
 type User struct {
@@ -24,21 +24,10 @@ type User struct {
 	Cellphone string `validate:"noneor,cellphone" json:"cellphone,omitempty"`
 	Email     string `validate:"noneor,email" json:"email,omitempty"`
 	Nickname  string `validate:"noneor,max=20" json:"nickname,omitempty"`
-	Password  string `validate:"nonone,min=6,max=24" json:"password,omitempty"`
+	Password  string `validate:"nonone,min=6,max=64" json:"password,omitempty"`
 }
 
 func (p *User) AddUser() (e error) {
-	if p.Cellphone == "" && p.Email == "" {
-		return fmt.Errorf("用户手机号和邮箱地址同时为空.")
-	}
-	if p.Password == "" {
-		return fmt.Errorf("用户密码为空.")
-	}
-
-	if e = validator.Validate(p); e != nil {
-		return
-	}
-
 	p.pretreat()
 
 	p.Id = genUserID()

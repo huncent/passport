@@ -13,6 +13,7 @@ import (
 
 	log "github.com/golang/glog"
 	gocommon "github.com/liuhengloveyou/go-common"
+	"github.com/liuhengloveyou/validator"
 )
 
 func HttpService() {
@@ -37,7 +38,22 @@ func HttpService() {
 	}
 }
 
+func optionsFilter(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "http://web.xim.com:9000")
+	w.Header().Add("Access-Control-Allow-Methods", "POST")
+	w.Header().Add("Access-Control-Allow-Credentials", "true")
+	w.Header().Add("Access-Control-Allow-Headers", "X-API, X-REQUEST-ID, X-API-TRANSACTION, X-API-TRANSACTION-TIMEOUT, X-RANGE, Origin, X-Requested-With, Content-Type, Accept")
+	w.Header().Add("P3P", `CP="CURa ADMa DEVa PSAo PSDo OUR BUS UNI PUR INT DEM STA PRE COM NAV OTC NOI DSP COR"`)
+
+	return
+}
+
 func UserAdd(w http.ResponseWriter, r *http.Request) {
+	optionsFilter(w, r)
+	if r.Method == "OPTIONS" {
+		return
+	}
+
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		log.Errorln("ioutil.ReadAll(r.Body) ERR: ", err)
@@ -54,7 +70,23 @@ func UserAdd(w http.ResponseWriter, r *http.Request) {
 		gocommon.HttpErr(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	log.Infoln(*user)
+
+	if err = validator.Validate(user); err != nil {
+		log.Errorln("validator ERR: ", err)
+		gocommon.HttpErr(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if user.Cellphone == "" && user.Email == "" {
+		log.Errorln("ERR: 用户手机号和邮箱地址同时为空.")
+		gocommon.HttpErr(w, http.StatusBadRequest, "用户手机号和邮箱地址同时为空.")
+		return
+	}
+	if user.Password == "" {
+		log.Errorln("ERR: 用户密码为空.")
+		gocommon.HttpErr(w, http.StatusBadRequest, "用户密码为空.")
+		return
+	}
 
 	err = user.AddUser()
 	if err != nil {
@@ -69,8 +101,13 @@ func UserAdd(w http.ResponseWriter, r *http.Request) {
 }
 
 func UserModify(w http.ResponseWriter, r *http.Request) {
+	optionsFilter(w, r)
+	if r.Method == "OPTIONS" {
+		return
+	}
+
 	//只有登录用户有权修改信息
-	sess, err := session.GetSession(w, r)
+	sess, err := session.GetSession(w, r, nil)
 	if err != nil {
 		gocommon.HttpErr(w, http.StatusInternalServerError, err.Error())
 		log.Errorln(err.Error())
@@ -110,7 +147,12 @@ func UserModify(w http.ResponseWriter, r *http.Request) {
 }
 
 func UserLogin(w http.ResponseWriter, r *http.Request) {
-	sess, err := session.GetSession(w, r)
+	optionsFilter(w, r)
+	if r.Method == "OPTIONS" {
+		return
+	}
+
+	sess, err := session.GetSession(w, r, nil)
 	if err != nil {
 		gocommon.HttpErr(w, http.StatusInternalServerError, err.Error())
 		log.Errorln(err.Error())
@@ -196,10 +238,15 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func UserLogout(w http.ResponseWriter, r *http.Request) {
-	uid, sid := session.SessionDestroy(w, r)
-	log.Infoln(uid, sid)
+	optionsFilter(w, r)
+	if r.Method == "OPTIONS" {
+		return
+	}
 
-	if uid != 0 && sid != "" {
+	sid := session.SessionDestroy(w, r)
+	log.Infoln(sid)
+
+	if sid != "" {
 		gocommon.HttpErr(w, http.StatusOK, "OK")
 	} else {
 		gocommon.HttpErr(w, http.StatusOK, "ERR")
@@ -209,7 +256,12 @@ func UserLogout(w http.ResponseWriter, r *http.Request) {
 }
 
 func UserAuth(w http.ResponseWriter, r *http.Request) {
-	sess, err := session.GetSession(w, r)
+	optionsFilter(w, r)
+	if r.Method == "OPTIONS" {
+		return
+	}
+
+	sess, err := session.GetSession(w, r, nil)
 	if err != nil {
 		gocommon.HttpErr(w, http.StatusInternalServerError, err.Error())
 		log.Warningln(err.Error())

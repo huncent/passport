@@ -1,6 +1,6 @@
 {
 	"domain": "passport.xim.com",
-	"listen": ":8080",
+	"listen": ":10001",
 	"serv_id": "6",
 	"dbs":[{
 		"name": "passport",
@@ -12,7 +12,7 @@
 		"domain": "xim.com",
 		"store_type": "mem",
 		"cookie_name": "ximsessionid",
-		"idle_time": 259200,
-		"cookie_expire": 259200
+		"idle_time": 86400,
+		"cookie_expire": 86400
 	}
 }

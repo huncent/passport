@@ -1,7 +1,7 @@
 # Passport
 
 
-数据库
+##数据库
 
 	CREATE DATABASE `passport` IF NOTEXISTS /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_bin */;
 
@@ -21,4 +21,21 @@
 	  UNIQUE KEY `nickname_UNIQUE` (`nickname`)
 	) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
-
+##接口
+###添加用户
+	POST /user/add
+	{
+		"cellphone":"15236379552", 
+		"email":"liuhengloveyou@gmail.com",
+		"nickname":"恒恒",
+		"password":"123456"
+	}
+	
+###用户登录
+	POST /user/login
+	{
+		"cellphone":"15236379552", 
+		"email":"liuhengloveyou@gmail.com",
+		"nickname":"恒恒",
+		"password":"123456"
+	}	
