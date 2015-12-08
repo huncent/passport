@@ -160,21 +160,15 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user := &service.User{}
-	if sess.Get("id") != nil {
-		user.Id = sess.Get("id").(int64)
-		if sess.Get("cellphone") != nil {
-			user.Cellphone = sess.Get("cellphone").(string)
-		} else if sess.Get("email") != nil {
-			user.Email = sess.Get("email").(string)
-		} else if sess.Get("nickname") != nil {
-			user.Nickname = sess.Get("nickname").(string)
-		}
-
+	tmp := sess.Get("user")
+	if tmp != nil {
+		user = tmp.(*service.User)
 		resp, _ := json.Marshal(user)
 		gocommon.HttpErr(w, http.StatusOK, string(resp))
 		log.Warning("login again:", user)
 		return // 已经登录
 	}
+	// 新登录。。。
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -184,30 +178,25 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Infoln(string(body))
 
-	err = json.Unmarshal(body, user)
-	if err != nil {
+	if err := json.Unmarshal(body, user); err != nil {
 		gocommon.HttpErr(w, http.StatusBadRequest, err.Error())
 		log.Errorln("json.Unmarshal(body, user) ERR: ", err)
 		return
 	}
-	log.Infoln(user)
 
-	mUser := &service.User{}
-	if user.Cellphone != "" {
-		mUser.Cellphone = user.Cellphone
-		sess.Set("cellphone", user.Cellphone)
-	} else if user.Email != "" {
-		mUser.Email = user.Email
-		sess.Set("email", user.Email)
-	} else if user.Nickname != "" {
-		mUser.Nickname = user.Nickname
-		sess.Set("nickname", user.Nickname)
-	} else {
+	if user.Cellphone == "" && user.Email == "" && user.Nickname != "" {
 		gocommon.HttpErr(w, http.StatusBadRequest, "用户标识为空.")
 		log.Errorln("用户标识为空.")
 		return
 	}
 
+	if err = validator.Validate(user); err != nil {
+		log.Errorln("validator ERR: ", err)
+		gocommon.HttpErr(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	mUser := &service.User{Cellphone: user.Cellphone, Email: user.Email, Nickname: user.Nickname}
 	has, err := mUser.Get()
 	if err != nil {
 		gocommon.HttpErr(w, http.StatusInternalServerError, err.Error())
@@ -228,8 +217,7 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	sess.Set("id", mUser.Id)
-	sess.Set("password", mUser.Password)
+	sess.Set("user", user)
 	log.Infoln(sess)
 
 	gocommon.HttpErr(w, http.StatusOK, "OK")
