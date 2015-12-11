@@ -10,8 +10,8 @@
 	}],
 	"session":{
 		"domain": "xim.com",
+		"cookie_name": "ximsession",	
 		"store_type": "mem",
-		"cookie_name": "ximsessionid",
 		"idle_time": 86400,
 		"cookie_expire": 86400
 	}

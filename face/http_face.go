@@ -40,8 +40,8 @@ func HttpService() {
 
 func optionsFilter(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "http://web.xim.com:9000")
-	w.Header().Add("Access-Control-Allow-Methods", "POST")
-	w.Header().Add("Access-Control-Allow-Credentials", "true")
+	w.Header().Set("Access-Control-Allow-Methods", "POST")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	w.Header().Add("Access-Control-Allow-Headers", "X-API, X-REQUEST-ID, X-API-TRANSACTION, X-API-TRANSACTION-TIMEOUT, X-RANGE, Origin, X-Requested-With, Content-Type, Accept")
 	w.Header().Add("P3P", `CP="CURa ADMa DEVa PSAo PSDo OUR BUS UNI PUR INT DEM STA PRE COM NAV OTC NOI DSP COR"`)
 
@@ -51,6 +51,10 @@ func optionsFilter(w http.ResponseWriter, r *http.Request) {
 func UserAdd(w http.ResponseWriter, r *http.Request) {
 	optionsFilter(w, r)
 	if r.Method == "OPTIONS" {
+		return
+	}
+	if r.Method != "POST" {
+		gocommon.HttpErr(w, http.StatusMethodNotAllowed, "")
 		return
 	}
 
@@ -105,6 +109,10 @@ func UserModify(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "OPTIONS" {
 		return
 	}
+	if r.Method != "POST" {
+		gocommon.HttpErr(w, http.StatusMethodNotAllowed, "")
+		return
+	}
 
 	//只有登录用户有权修改信息
 	sess, err := session.GetSession(w, r, nil)
@@ -149,6 +157,9 @@ func UserModify(w http.ResponseWriter, r *http.Request) {
 func UserLogin(w http.ResponseWriter, r *http.Request) {
 	optionsFilter(w, r)
 	if r.Method == "OPTIONS" {
+		return
+	} else if r.Method != "POST" {
+		gocommon.HttpErr(w, http.StatusMethodNotAllowed, "")
 		return
 	}
 
@@ -196,7 +207,15 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	mUser := &service.User{Cellphone: user.Cellphone, Email: user.Email, Nickname: user.Nickname}
+	mUser := &service.User{}
+	if user.Cellphone != "" {
+		mUser.Cellphone = user.Cellphone
+	} else if user.Email != "" {
+		mUser.Email = user.Email
+	} else if user.Nickname != "" {
+		mUser.Nickname = user.Nickname
+	}
+
 	has, err := mUser.Get()
 	if err != nil {
 		gocommon.HttpErr(w, http.StatusInternalServerError, err.Error())
@@ -257,30 +276,24 @@ func UserAuth(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Info(sess)
 
-	if sess.Get("id") == nil {
+	if sess.Id("") == "" {
 		gocommon.HttpErr(w, http.StatusForbidden, "{}")
 		log.Errorln("session no id:", sess)
 		return
 	}
 
-	mUser := &service.User{}
-	if sess.Get("id") != nil {
-		mUser.Id = sess.Get("id").(int64)
+	if sess.Get("user") == nil {
+		gocommon.HttpErr(w, http.StatusForbidden, "{}")
+		log.Errorln("session no user:", sess)
+		return
 	}
-	if sess.Get("cellphone") != nil {
-		mUser.Cellphone = sess.Get("cellphone").(string)
-	}
-	if sess.Get("email") != nil {
-		mUser.Email = sess.Get("email").(string)
-	}
-	if sess.Get("nickname") != nil {
-		mUser.Nickname = sess.Get("nickname").(string)
-	}
+
+	mUser := sess.Get("user").(*service.User)
+	mUser.Password = ""
 	log.Infoln(mUser)
 
-	user, _ := json.Marshal(mUser)
-
-	gocommon.HttpErr(w, http.StatusOK, string(user))
+	userStr, _ := json.Marshal(mUser)
+	gocommon.HttpErr(w, http.StatusOK, string(userStr))
 
 	return
 }

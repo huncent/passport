@@ -10,6 +10,11 @@ type Passport struct {
 	ServAddr string
 }
 
+func (p *Passport) UserAuth(cookies []*http.Cookie) (status int, response []byte, err error) {
+	status, response, err = gocommon.PostRest(p.ServAddr+"/user/auth", make([]byte, 0), cookies, nil)
+	return
+}
+
 func (p *Passport) Execute(uri string, data []byte, cookies []*http.Cookie) (status int, responseCookies []*http.Cookie, response []byte, err error) {
 	status, responseCookies, response, err = gocommon.PostRest(p.ServAddr+uri, data, cookies, nil)
 	return
