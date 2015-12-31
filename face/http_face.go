@@ -23,8 +23,6 @@ func HttpService() {
 	http.HandleFunc("/user/auth", UserAuth)
 	http.HandleFunc("/user/logout", UserLogout)
 
-	//http.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir("./static/"))))
-
 	s := &http.Server{
 		Addr:           common.ServConfig.Listen,
 		ReadTimeout:    10 * time.Minute,
@@ -52,8 +50,7 @@ func UserAdd(w http.ResponseWriter, r *http.Request) {
 	optionsFilter(w, r)
 	if r.Method == "OPTIONS" {
 		return
-	}
-	if r.Method != "POST" {
+	} else if r.Method != "POST" {
 		gocommon.HttpErr(w, http.StatusMethodNotAllowed, "")
 		return
 	}
@@ -100,7 +97,8 @@ func UserAdd(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	gocommon.HttpErr(w, http.StatusOK, "OK")
+	gocommon.HttpErr(w, http.StatusOK, fmt.Sprintf("{\"userid\":%v}", user.Id))
+
 	return
 }
 
@@ -108,8 +106,7 @@ func UserModify(w http.ResponseWriter, r *http.Request) {
 	optionsFilter(w, r)
 	if r.Method == "OPTIONS" {
 		return
-	}
-	if r.Method != "POST" {
+	} else if r.Method != "POST" {
 		gocommon.HttpErr(w, http.StatusMethodNotAllowed, "")
 		return
 	}
@@ -239,7 +236,7 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 	sess.Set("user", user)
 	log.Infoln(sess)
 
-	gocommon.HttpErr(w, http.StatusOK, "OK")
+	fmt.Fprintf(w, "{\"uid\":\"%v\", \"token\":\"%v\"}", mUser.Id, sess.Id(""))
 
 	return
 }
