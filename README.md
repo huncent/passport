@@ -1,5 +1,32 @@
-# Passport
+# 用户中心(Passport)
+把用户权限，会话管理提出一个单独的服务。
 
+##接口
+###添加用户
+	POST /user/add
+	Body:
+	{
+		"cellphone":"18510511015", 
+		"email":"liuhengloveyou@gmail.com",
+		"nickname":"恒恒",
+		"password":"123456"
+	}
+	
+	成功：200 {"userid":"xxxxxx"}
+	失败：^200 {"message":"error message."}
+	
+###用户登录
+	POST /user/login[?token=xxxxxx]
+	Body:
+	{
+		"cellphone":"18510511015", 
+		"email":"liuhengloveyou@gmail.com",
+		"nickname":"恒恒",
+		"password":"123456"
+	}	
+  
+	成功：200 {"userid":"xxxxxx", "token":"xxxxxx"}
+	失败：^200 {"message":"error message."}
 
 ##数据库
 
@@ -20,22 +47,3 @@
 	  UNIQUE KEY `email_UNIQUE` (`email`),
 	  UNIQUE KEY `nickname_UNIQUE` (`nickname`)
 	) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
-
-##接口
-###添加用户
-	POST /user/add
-	{
-		"cellphone":"15236379552", 
-		"email":"liuhengloveyou@gmail.com",
-		"nickname":"恒恒",
-		"password":"123456"
-	}
-	
-###用户登录
-	POST /user/login
-	{
-		"cellphone":"15236379552", 
-		"email":"liuhengloveyou@gmail.com",
-		"nickname":"恒恒",
-		"password":"123456"
-	}	
