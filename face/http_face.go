@@ -37,6 +37,8 @@ func HttpService() {
 }
 
 func optionsFilter(w http.ResponseWriter, r *http.Request) {
+	return
+
 	w.Header().Set("Access-Control-Allow-Origin", "http://web.xim.com:9000")
 	w.Header().Set("Access-Control-Allow-Methods", "POST")
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
@@ -97,7 +99,8 @@ func UserAdd(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	gocommon.HttpErr(w, http.StatusOK, fmt.Sprintf("{\"userid\":%v}", user.Id))
+	log.Infoln("user add ok:", user.Id)
+	fmt.Fprintf(w, "{\"userid\":%v}", user.Id)
 
 	return
 }
@@ -162,8 +165,8 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 
 	sess, err := session.GetSession(w, r, nil)
 	if err != nil {
-		gocommon.HttpErr(w, http.StatusInternalServerError, err.Error())
-		log.Errorln(err.Error())
+		gocommon.HttpErr(w, http.StatusInternalServerError, "会话错误.")
+		log.Errorln("session.GetSession ERR:", err.Error())
 		return
 	}
 
@@ -184,11 +187,11 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 		log.Errorln("ioutil.ReadAll(r.Body) ERR: ", err)
 		return
 	}
-	log.Infoln(string(body))
+	log.Infoln("body:", string(body))
 
 	if err := json.Unmarshal(body, user); err != nil {
 		gocommon.HttpErr(w, http.StatusBadRequest, err.Error())
-		log.Errorln("json.Unmarshal(body, user) ERR: ", err)
+		log.Errorln("json.Unmarshal(body, user) ERR: ", err, body)
 		return
 	}
 
@@ -234,9 +237,9 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sess.Set("user", user)
-	log.Infoln(sess)
+	log.Infoln("user login ok:", sess)
 
-	fmt.Fprintf(w, "{\"uid\":\"%v\", \"token\":\"%v\"}", mUser.Id, sess.Id(""))
+	fmt.Fprintf(w, "{\"userid\":\"%v\", \"token\":\"%v\"}", mUser.Id, sess.Id(""))
 
 	return
 }
