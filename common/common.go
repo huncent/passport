@@ -29,42 +29,12 @@ func InitPassportServ(confile string) error {
 		return e
 	}
 
-	if e := InitDbPool(ServConfig.DBs, Xorms); e != nil {
+	if e := gocommon.InitDBPool(ServConfig.DBs, Xorms); e != nil {
 		return e
 	}
 
 	if nil == session.InitDefaultSessionManager(ServConfig.Session) {
 		return fmt.Errorf("InitDefaultSessionManager err.")
-	}
-
-	return nil
-}
-
-func InitDbPool(conf interface{}, pool map[string]*xorm.Engine) (err error) {
-	var dbs []struct {
-		Name   string `json:"name"`
-		NGType string `json:"ng_type"`
-		DBType string `json:"db_type"`
-		DSN    string `json:"dsn"`
-	}
-
-	var byteConf []byte
-	if byteConf, err = json.Marshal(conf); err != nil {
-		return
-	}
-
-	if err = json.Unmarshal(byteConf, &dbs); err != nil {
-		return
-	}
-
-	for _, db := range dbs {
-		if db.NGType == "xorm" {
-			pool[db.Name], err = xorm.NewEngine(db.DBType, db.DSN)
-		}
-
-		if err != nil {
-			return err
-		}
 	}
 
 	return nil
