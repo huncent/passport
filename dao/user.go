@@ -7,7 +7,7 @@ import (
 )
 
 type User struct {
-	Id         int64      `xorm:"BIGINT(64)"`
+	Userid     *string    `xorm:"VARCHAR(45)"`
 	Cellphone  *string    `xorm:"VARCHAR(11)"`
 	Email      *string    `xorm:"VARCHAR(45)"`
 	Nickname   *string    `xorm:"VARCHAR(45)"`
@@ -25,7 +25,7 @@ func (p *User) Insert() (e error) {
 }
 
 func (p *User) Update() (e error) {
-	_, e = common.Xorms["passport"].Id(p.Id).Update(p)
+	_, e = common.Xorms["passport"].Id(p.Userid).Update(p)
 
 	return
 }

@@ -99,8 +99,8 @@ func UserAdd(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	log.Infoln("user add ok:", user.Id)
-	fmt.Fprintf(w, "{\"userid\":%v}", user.Id)
+	log.Infoln("user add ok:", user.Userid)
+	fmt.Fprintf(w, "{\"userid\":%v}", user.Userid)
 
 	return
 }
@@ -228,7 +228,7 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	loginPWD := service.EncryPWD(mUser.Id, user.Password)
+	loginPWD := service.EncryPWD(mUser.Userid, user.Password)
 	if loginPWD != mUser.Password {
 		gocommon.HttpErr(w, http.StatusForbidden, "用户密码不正确.")
 		log.Warningln(*user, *mUser, "用户密码不正确.")
@@ -239,7 +239,7 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 	sess.Set("user", user)
 	log.Infoln("user login ok:", sess)
 
-	fmt.Fprintf(w, "{\"userid\":\"%v\", \"token\":\"%v\"}", mUser.Id, sess.Id(""))
+	fmt.Fprintf(w, "{\"userid\":\"%v\", \"token\":\"%v\"}", mUser.Userid, sess.Id(""))
 
 	return
 }

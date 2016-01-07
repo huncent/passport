@@ -1,7 +1,7 @@
 package service
 
 import (
-	"crypto/sha1"
+	"crypto/sha256"
 	"fmt"
 	"strconv"
 	"strings"
@@ -20,7 +20,7 @@ func init() {
 }
 
 type User struct {
-	Id        int64  `validate:"-" json:"id,omitempty"`
+	Userid    string `validate:"-" json:"id,omitempty"`
 	Cellphone string `validate:"noneor,cellphone" json:"cellphone,omitempty"`
 	Email     string `validate:"noneor,email" json:"email,omitempty"`
 	Nickname  string `validate:"noneor,max=20" json:"nickname,omitempty"`
@@ -30,8 +30,7 @@ type User struct {
 func (p *User) AddUser() (e error) {
 	p.pretreat()
 
-	p.Id = genUserID()
-	if p.Id <= 0 {
+	if p.Userid = genUserID(); p.Userid == "" {
 		return fmt.Errorf("用户ID空.")
 	}
 
@@ -41,7 +40,7 @@ func (p *User) AddUser() (e error) {
 }
 
 func (p *User) UpdateUser() (e error) {
-	if p.Id <= 0 {
+	if p.Userid == "" {
 		return fmt.Errorf("用户ID空.")
 	}
 
@@ -73,7 +72,7 @@ func (p *User) Get() (has bool, e error) {
 		return
 	}
 
-	p.Id = one.Id
+	p.Userid = *one.Userid
 	if one.Cellphone != nil {
 		p.Cellphone = *one.Cellphone
 	}
@@ -101,7 +100,7 @@ func (p *User) pretreat() {
 }
 
 func (p *User) toDao() *dao.User {
-	dao := &dao.User{Id: p.Id}
+	dao := &dao.User{Userid: &p.Userid}
 	if p.Cellphone != "" {
 		dao.Cellphone = &p.Cellphone
 	}
@@ -120,19 +119,18 @@ func (p *User) toDao() *dao.User {
 
 func (p *User) encryPWD() {
 	if p.Password != "" {
-		p.Password = EncryPWD(p.Id, p.Password)
+		p.Password = EncryPWD(p.Userid, p.Password)
 	}
 }
 
 // 加密用户密码
-func EncryPWD(userid int64, password string) string {
+func EncryPWD(userid string, password string) string {
 	const SYS_PWD = "When you forgive, You love. And when you love, God's light shines on you."
-
-	return fmt.Sprintf("%x", sha1.Sum([]byte(fmt.Sprintf("%v%v%v", SYS_PWD, password, (userid/1986)>>4))))
+	iuserid, _ := strconv.ParseInt(userid, 10, 64)
+	return fmt.Sprintf("%x", sha256.Sum256([]byte(fmt.Sprintf("%v%v%v", SYS_PWD, password, (iuserid/1986)>>4))))
 }
 
 // 生成用户ID
-func genUserID() int64 {
-	id, _ := strconv.ParseInt(gid.ID(), 10, 64)
-	return id
+func genUserID() string {
+	return gid.ID()
 }

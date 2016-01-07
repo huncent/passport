@@ -43,10 +43,8 @@ func InitPassportServ(confile string) error {
 func InitSystem(conf interface{}) (err error) {
 	// 建库,建表
 	sqlStr := `
-	CREATE DATABASE passport IF NOTEXISTS;
-
 	CREATE TABLE user (
-	  id bigint(64) NOT NULL,
+	  userid varchar(45) NOT NULL,
 	  cellphone varchar(11) COLLATE utf8_bin DEFAULT NULL,
 	  email varchar(45) COLLATE utf8_bin DEFAULT NULL,
 	  nickname varchar(45) CHARACTER SET utf8 DEFAULT NULL,
