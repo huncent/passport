@@ -18,26 +18,26 @@ type Passport struct {
 func (p *Passport) UserAdd(cellphone, email, nickname, password string) (userid string, err error) {
 	userinfo := &service.User{Cellphone: cellphone, Email: email, Nickname: nickname, Password: password}
 	if err = validator.Validate(userinfo); err != nil {
-		return 0, err
+		return "", err
 	}
 
 	body, err := json.Marshal(userinfo)
 	if err != nil {
-		return 0, err
+		return "", err
 	}
 
 	status, _, response, err := gocommon.PostRequest(p.ServAddr+"/user/add", body, nil, nil)
 	if err != nil {
-		return 0, err
+		return "", err
 	}
 
 	if status != http.StatusOK {
-		return 0, fmt.Errorf("%s", response)
+		return "", fmt.Errorf("%s", response)
 	}
 
-	rst := make(map[string]int64, 0)
+	rst := make(map[string]string, 0)
 	if err = json.Unmarshal(response, &rst); err != nil {
-		return 0, err
+		return "", err
 	}
 
 	return rst["userid"], nil
