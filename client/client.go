@@ -15,7 +15,7 @@ type Passport struct {
 	ServAddr string
 }
 
-func (p *Passport) UserAdd(cellphone, email, nickname, password string) (userid int64, err error) {
+func (p *Passport) UserAdd(cellphone, email, nickname, password string) (userid string, err error) {
 	userinfo := &service.User{Cellphone: cellphone, Email: email, Nickname: nickname, Password: password}
 	if err = validator.Validate(userinfo); err != nil {
 		return 0, err

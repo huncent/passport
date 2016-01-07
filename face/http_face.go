@@ -100,7 +100,7 @@ func UserAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Infoln("user add ok:", user.Userid)
-	fmt.Fprintf(w, "{\"userid\":%v}", user.Userid)
+	fmt.Fprintf(w, "{\"userid\":\"%v\"}", user.Userid)
 
 	return
 }
