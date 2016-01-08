@@ -200,10 +200,9 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := &service.User{}
 	tmp := sess.Get("user")
 	if tmp != nil {
-		user = tmp.(*service.User)
+		user := tmp.(*service.User)
 		fmt.Fprintf(w, "{\"userid\":\"%v\", \"token\":\"%v\"}", user.Userid, sess.Id(""))
 		log.Warning("login again:", user)
 		return // 已经登录
@@ -218,6 +217,7 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Infoln("body:", string(body))
 
+	user := &service.User{}
 	if err := json.Unmarshal(body, user); err != nil {
 		gocommon.HttpErr(w, http.StatusBadRequest, err.Error())
 		log.Errorln("json.Unmarshal(body, user) ERR: ", err, body)
@@ -245,7 +245,7 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 		mUser.Nickname = user.Nickname
 	}
 
-	has, err := mUser.Get()
+	has, err := mUser.GetOne()
 	if err != nil {
 		gocommon.HttpErr(w, http.StatusInternalServerError, err.Error())
 		log.Errorln(*user, err)
@@ -299,9 +299,10 @@ func UserAuth(w http.ResponseWriter, r *http.Request) {
 	sess, auth := authFilter(w, r)
 	if auth == false {
 		gocommon.HttpErr(w, http.StatusForbidden, "末登录.")
+		return
 	}
-	log.Info("auth:", sess)
 
+	log.Info("auth:", sess)
 	mUser := sess.Get("user").(*service.User)
 	mUser.Password = ""
 	log.Infoln("auth:", mUser)

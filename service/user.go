@@ -63,7 +63,7 @@ func (p *User) UpdateUser() (e error) {
 	return p.toDao().Update()
 }
 
-func (p *User) Get() (has bool, e error) {
+func (p *User) GetOne() (has bool, e error) {
 	p.pretreat()
 
 	fmt.Println(*p)

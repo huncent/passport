@@ -43,12 +43,14 @@ func (p *Passport) UserAdd(cellphone, email, nickname, password string) (userid 
 	return rst["userid"], nil
 }
 
-func (p *Passport) UserAuth(cookies []*http.Cookie) (status int, response []byte, err error) {
-	//status, _, response, err = gocommon.PostRequest(p.ServAddr+"/user/auth", make([]byte, 0), cookies, nil)
-	return
-}
+func (p *Passport) UserAuth(token string) (sessionInfo []byte, err error) {
+	status, _, response, err := gocommon.GetRequest(p.ServAddr + "/user/auth?token=" + token)
+	if err != nil {
+		return nil, err
+	}
+	if status != http.StatusOK {
+		return nil, nil
+	}
 
-func (p *Passport) Execute(uri string, data []byte, cookies []*http.Cookie) (status int, responseCookies []*http.Cookie, response []byte, err error) {
-	//status, responseCookies, response, err = gocommon.PostRequest(p.ServAddr+uri, data, cookies, nil)
-	return
+	return response, nil
 }
