@@ -32,6 +32,5 @@ func (p *User) Update() (e error) {
 
 func (p *User) GetOne() (has bool, e error) {
 	has, e = common.Xorms["passport"].Get(p)
-
 	return
 }

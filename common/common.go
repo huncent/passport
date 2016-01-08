@@ -37,6 +37,9 @@ func InitPassportServ(confile string) error {
 		return fmt.Errorf("InitDefaultSessionManager err.")
 	}
 
+	Xorms["passport"].ShowSQL = true
+	Xorms["passport"].ShowDebug = true
+
 	return nil
 }
 

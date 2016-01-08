@@ -20,7 +20,7 @@ func init() {
 }
 
 type User struct {
-	Userid    string `validate:"-" json:"id,omitempty"`
+	Userid    string `validate:"-" json:"userid,omitempty"`
 	Cellphone string `validate:"noneor,cellphone" json:"cellphone,omitempty"`
 	Email     string `validate:"noneor,email" json:"email,omitempty"`
 	Nickname  string `validate:"noneor,max=20" json:"nickname,omitempty"`
@@ -66,6 +66,7 @@ func (p *User) UpdateUser() (e error) {
 func (p *User) Get() (has bool, e error) {
 	p.pretreat()
 
+	fmt.Println(*p)
 	one := p.toDao()
 	has, e = one.GetOne()
 	if e != nil || has == false {
@@ -100,7 +101,10 @@ func (p *User) pretreat() {
 }
 
 func (p *User) toDao() *dao.User {
-	dao := &dao.User{Userid: &p.Userid}
+	dao := &dao.User{}
+	if p.Userid != "" {
+		dao.Userid = &p.Userid
+	}
 	if p.Cellphone != "" {
 		dao.Cellphone = &p.Cellphone
 	}

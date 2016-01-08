@@ -12,8 +12,8 @@
 		"password":"123456"
 	}
 	
-	成功：200 {"userid":"xxxxxx"}
-	失败：^200 {"message":"error message."}
+	成功: 200 {"userid":"用户ID"}
+	失败: ^200 {"message":"错误信息."}
 	
 ###用户登录
 	POST /user/login[?token=xxxxxx]
@@ -25,8 +25,8 @@
 		"password":"123456"
 	}	
   
-	成功：200 {"userid":"xxxxxx", "token":"xxxxxx"}
-	失败：^200 {"message":"error message."}
+	成功: 200 {"userid":"用户ID", "token":"xxxxxx"}
+	失败: ^200 {"message":"错误信息."}
 
 ##数据库
 

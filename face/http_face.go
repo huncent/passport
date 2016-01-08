@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/liuhengloveyou/passport/common"
@@ -36,6 +37,9 @@ func HttpService() {
 	}
 }
 
+/*
+ * 跨域资源共享
+ */
 func optionsFilter(w http.ResponseWriter, r *http.Request) {
 	return
 
@@ -46,6 +50,38 @@ func optionsFilter(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("P3P", `CP="CURa ADMa DEVa PSAo PSDo OUR BUS UNI PUR INT DEM STA PRE COM NAV OTC NOI DSP COR"`)
 
 	return
+}
+
+func authFilter(w http.ResponseWriter, r *http.Request) (sess session.SessionStore, auth bool) {
+	if e := r.ParseForm(); e != nil {
+		return nil, false
+	}
+
+	token := strings.TrimSpace(r.FormValue("token"))
+	if token == "" {
+		sessionConf := common.ServConfig.Session.(map[string]interface{})
+		if cookie, e := r.Cookie(sessionConf["cookie_name"].(string)); e == nil {
+			if cookie != nil {
+				token = cookie.Value
+			}
+		}
+	}
+	if token == "" {
+		return nil, false
+	}
+
+	sess, err := session.GetSessionById(token)
+	if err != nil {
+		log.Warningln("session ERR:", err.Error())
+		return nil, false
+	}
+
+	if sess.Get("user") == nil {
+		log.Errorln("session no user:", sess)
+		return sess, false
+	}
+
+	return sess, true
 }
 
 func UserAdd(w http.ResponseWriter, r *http.Request) {
@@ -115,15 +151,9 @@ func UserModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//只有登录用户有权修改信息
-	sess, err := session.GetSession(w, r, nil)
-	if err != nil {
-		gocommon.HttpErr(w, http.StatusInternalServerError, err.Error())
-		log.Errorln(err.Error())
-		return
-	}
-	if sess.Get("id") == nil {
-		gocommon.HttpErr(w, http.StatusForbidden, "用户末登录.")
-		log.Warning("update no login:", sess)
+	_, auth := authFilter(w, r)
+	if auth == false {
+		gocommon.HttpErr(w, http.StatusForbidden, "末登录用户.")
 		return
 	}
 
@@ -163,7 +193,7 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sess, err := session.GetSession(w, r, nil)
+	sess, err := session.GetSession(w, r, "")
 	if err != nil {
 		gocommon.HttpErr(w, http.StatusInternalServerError, "会话错误.")
 		log.Errorln("session.GetSession ERR:", err.Error())
@@ -174,8 +204,7 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 	tmp := sess.Get("user")
 	if tmp != nil {
 		user = tmp.(*service.User)
-		resp, _ := json.Marshal(user)
-		gocommon.HttpErr(w, http.StatusOK, string(resp))
+		fmt.Fprintf(w, "{\"userid\":\"%v\", \"token\":\"%v\"}", user.Userid, sess.Id(""))
 		log.Warning("login again:", user)
 		return // 已经登录
 	}
@@ -238,7 +267,6 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 
 	sess.Set("user", user)
 	log.Infoln("user login ok:", sess)
-
 	fmt.Fprintf(w, "{\"userid\":\"%v\", \"token\":\"%v\"}", mUser.Userid, sess.Id(""))
 
 	return
@@ -268,32 +296,18 @@ func UserAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sess, err := session.GetSession(w, r, nil)
-	if err != nil {
-		gocommon.HttpErr(w, http.StatusInternalServerError, err.Error())
-		log.Warningln(err.Error())
-		return
+	sess, auth := authFilter(w, r)
+	if auth == false {
+		gocommon.HttpErr(w, http.StatusForbidden, "末登录.")
 	}
-	log.Info(sess)
-
-	if sess.Id("") == "" {
-		gocommon.HttpErr(w, http.StatusForbidden, "{}")
-		log.Errorln("session no id:", sess)
-		return
-	}
-
-	if sess.Get("user") == nil {
-		gocommon.HttpErr(w, http.StatusForbidden, "{}")
-		log.Errorln("session no user:", sess)
-		return
-	}
+	log.Info("auth:", sess)
 
 	mUser := sess.Get("user").(*service.User)
 	mUser.Password = ""
-	log.Infoln(mUser)
+	log.Infoln("auth:", mUser)
 
 	userStr, _ := json.Marshal(mUser)
-	gocommon.HttpErr(w, http.StatusOK, string(userStr))
+	w.Write(userStr)
 
 	return
 }

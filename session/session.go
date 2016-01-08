@@ -93,16 +93,16 @@ func NewSessionManager(sessionConfig interface{}) (m *SessionManager) {
 	return m
 }
 
-func (p *SessionManager) GetSession(w http.ResponseWriter, r *http.Request, sessionid *string) (session SessionStore, err error) {
+func (p *SessionManager) GetSession(w http.ResponseWriter, r *http.Request, sessionid string) (session SessionStore, err error) {
 	writeCookie := false
 	sid := ""
 
 	cookie, errs := r.Cookie(p.CookieName)
 	if errs != nil || cookie.Value == "" {
-		if sessionid == nil {
+		if sessionid == "" {
 			sid, err = p.sessionId()
 		} else {
-			sid = *sessionid
+			sid = sessionid
 		}
 		writeCookie = true
 	} else {
@@ -174,15 +174,9 @@ func (p *SessionManager) SessionDestroy(w http.ResponseWriter, r *http.Request) 
 	return
 }
 
-func (p *SessionManager) GetSessionById(sessionid *string) (session SessionStore, err error) {
-	sid := ""
-
-	if sessionid == nil {
-		if sid, err = p.sessionId(); err != nil {
-			return nil, err
-		}
-	} else {
-		sid = *sessionid
+func (p *SessionManager) GetSessionById(sid string) (session SessionStore, err error) {
+	if sid == "" {
+		return nil, nil
 	}
 
 	if sess, ok := p.sessions[sid]; ok {
@@ -293,15 +287,15 @@ func InitDefaultSessionManager(conf interface{}) *SessionManager {
 	return defaultSessionManager
 }
 
-func GetSession(w http.ResponseWriter, r *http.Request, sessionid *string) (session SessionStore, err error) {
-	return defaultSessionManager.GetSession(w, r, sessionid)
+func GetSession(w http.ResponseWriter, r *http.Request, sid string) (session SessionStore, err error) {
+	return defaultSessionManager.GetSession(w, r, sid)
 }
 
-func GetSessionById(sessionid *string) (session SessionStore, err error) {
-	return defaultSessionManager.GetSessionById(sessionid)
+func GetSessionById(sid string) (session SessionStore, err error) {
+	return defaultSessionManager.GetSessionById(sid)
 }
 
-func SessionDestroy(w http.ResponseWriter, r *http.Request) (sessionid string) {
+func SessionDestroy(w http.ResponseWriter, r *http.Request) (sid string) {
 	return defaultSessionManager.SessionDestroy(w, r)
 }
 
