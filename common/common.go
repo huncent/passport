@@ -8,13 +8,12 @@ import (
 	"github.com/liuhengloveyou/passport/session"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/go-xorm/xorm"
 	gocommon "github.com/liuhengloveyou/go-common"
 )
 
 var (
 	ServConfig ConfigServ
-	Xorms      = make(map[string]*xorm.Engine)
+	DBs        = make(map[string]*gocommon.DBmysql)
 )
 
 type ConfigServ struct {
@@ -29,16 +28,13 @@ func InitPassportServ(confile string) error {
 		return e
 	}
 
-	if e := gocommon.InitDBPool(ServConfig.DBs, Xorms); e != nil {
+	if e := gocommon.InitDBPool(ServConfig.DBs, DBs); e != nil {
 		return e
 	}
 
 	if nil == session.InitDefaultSessionManager(ServConfig.Session) {
 		return fmt.Errorf("InitDefaultSessionManager err.")
 	}
-
-	Xorms["passport"].ShowSQL = true
-	Xorms["passport"].ShowDebug = true
 
 	return nil
 }

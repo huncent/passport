@@ -19,18 +19,19 @@ type User struct {
 }
 
 func (p *User) Insert() (e error) {
-	_, e = common.Xorms["passport"].InsertOne(p)
+	_, e = common.DBs["passport"].Insert("INSERT INTO user values(?,?,?,?,?,?,?,?,?)",
+		p.Userid, p.Cellphone, p.Email, p.Nickname, p.Password, p.AddTime, p.UpdateTime, p.Stat, 1)
 
 	return
 }
 
 func (p *User) Update() (e error) {
-	_, e = common.Xorms["passport"].Id(p.Userid).Update(p)
+	//	_, e = common.DBs["passport"].Update("UPDATE user"
 
 	return
 }
 
 func (p *User) GetOne() (has bool, e error) {
-	has, e = common.Xorms["passport"].Get(p)
+	//	has, e = common.DBs["passport"].Query(sqlStr string, args ...interface{})
 	return
 }

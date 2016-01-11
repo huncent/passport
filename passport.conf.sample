@@ -4,7 +4,7 @@
 	"serv_id": "6",
 	"dbs":[{
 		"name": "passport",
-		"ng_type": "xorm",
+		"ng_type": "mysql",
 		"db_type": "mysql",
 		"dsn": "root:root@tcp(127.0.0.1:3306)/passport?charset=utf8"
 	}],
