@@ -39,6 +39,39 @@ func (p *User) AddUser() (e error) {
 	return p.toDao().Insert()
 }
 
+func (p *User) LoginByCellphone() (has bool, e error) {
+	p.pretreat()
+	one := p.toDao()
+	e = one.QueryByCellphone()
+	if e != nil {
+		return
+	}
+
+	p.Userid = one.Userid
+	if one.Cellphone != nil {
+		p.Cellphone = *one.Cellphone
+	}
+	if one.Email != nil {
+		p.Email = *one.Email
+	}
+	if one.Nickname != nil {
+		p.Nickname = *one.Nickname
+	}
+	if one.Password != nil {
+		p.Password = *one.Password
+	}
+
+	return true, nil
+}
+
+func (p *User) LoginByEmail() (has bool, e error) {
+	return false, nil
+}
+
+func (p *User) LoginByNickname() (has bool, e error) {
+	return false, nil
+}
+
 func (p *User) UpdateUser() (e error) {
 	if p.Userid == "" {
 		return fmt.Errorf("用户ID空.")
@@ -63,33 +96,6 @@ func (p *User) UpdateUser() (e error) {
 	return p.toDao().Update()
 }
 
-func (p *User) GetOne() (has bool, e error) {
-	p.pretreat()
-
-	fmt.Println(*p)
-	one := p.toDao()
-	has, e = one.GetOne()
-	if e != nil || has == false {
-		return
-	}
-
-	p.Userid = *one.Userid
-	if one.Cellphone != nil {
-		p.Cellphone = *one.Cellphone
-	}
-	if one.Email != nil {
-		p.Email = *one.Email
-	}
-	if one.Nickname != nil {
-		p.Nickname = *one.Nickname
-	}
-	if one.Password != nil {
-		p.Password = *one.Password
-	}
-
-	return true, nil
-}
-
 ////////
 func (p *User) pretreat() {
 	if p.Cellphone != "" {
@@ -101,10 +107,7 @@ func (p *User) pretreat() {
 }
 
 func (p *User) toDao() *dao.User {
-	dao := &dao.User{}
-	if p.Userid != "" {
-		dao.Userid = &p.Userid
-	}
+	dao := &dao.User{Userid: p.Userid}
 	if p.Cellphone != "" {
 		dao.Cellphone = &p.Cellphone
 	}

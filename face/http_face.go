@@ -236,16 +236,19 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var has bool
 	mUser := &service.User{}
 	if user.Cellphone != "" {
 		mUser.Cellphone = user.Cellphone
+		has, err = mUser.LoginByCellphone()
 	} else if user.Email != "" {
 		mUser.Email = user.Email
+		has, err = mUser.LoginByEmail()
 	} else if user.Nickname != "" {
 		mUser.Nickname = user.Nickname
+		has, err = mUser.LoginByNickname()
 	}
 
-	has, err := mUser.GetOne()
 	if err != nil {
 		gocommon.HttpErr(w, http.StatusInternalServerError, err.Error())
 		log.Errorln(*user, err)
@@ -265,7 +268,7 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	sess.Set("user", user)
+	sess.Set("user", mUser)
 	log.Infoln("user login ok:", sess)
 	fmt.Fprintf(w, "{\"userid\":\"%v\", \"token\":\"%v\"}", mUser.Userid, sess.Id(""))
 
@@ -302,10 +305,9 @@ func UserAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Info("auth:", sess)
 	mUser := sess.Get("user").(*service.User)
 	mUser.Password = ""
-	log.Infoln("auth:", mUser)
+	log.Infoln("auth:", mUser, sess)
 
 	userStr, _ := json.Marshal(mUser)
 	w.Write(userStr)
