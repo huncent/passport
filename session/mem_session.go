@@ -6,9 +6,10 @@ import (
 )
 
 type MemSessionStore struct {
-	id     string
-	data   map[interface{}]interface{}
-	active int64
+	id     string                      // 会话ID
+	data   map[interface{}]interface{} // 会话数据
+	create int64                       // 会话创建时间戳
+	active int64                       // 最后活动时间戳
 	lock   sync.RWMutex
 }
 
@@ -70,6 +71,10 @@ func (p *MemSessionStore) Active(set bool) (val int64) {
 	return
 }
 
+func (p *MemSessionStore) CreateTime() int64 {
+	return p.create
+}
+
 func (p *MemSessionStore) Release() {
 	p.lock.Lock()
 	p.active = -1
@@ -80,6 +85,7 @@ func (p *MemSessionStore) Release() {
 func NewMemSessionStore(config interface{}) (SessionStore, error) {
 	return &MemSessionStore{
 		data:   make(map[interface{}]interface{}),
+		create: time.Now().Unix(),
 		active: time.Now().Unix()}, nil
 }
 

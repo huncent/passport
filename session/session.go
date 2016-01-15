@@ -20,17 +20,18 @@ var (
 	stores = make(map[string]SessionStoreType)
 )
 
-type PrepireReleaseFunc func(SessionStore)
 type SessionStoreType func(interface{}) (SessionStore, error)
+type PrepireReleaseFunc func(SessionStore) // 会话销毁时回调的函数
 
 type SessionStore interface {
-	Id(string) string
-	Active(set bool) int64
-	Keys() []interface{}
-	Get(key interface{}) interface{}
-	Set(key, val interface{}) error
-	Delete(key interface{}) error
-	Release()
+	Id(string) string                // 获取/设置会话ID
+	CreateTime() int64               // 获取会话创建时间
+	Active(set bool) int64           // 获取/设置最后活动时间
+	Keys() []interface{}             // 获取所有二级键
+	Get(key interface{}) interface{} // 获取一个键值
+	Set(key, val interface{}) error  // 设置一个键值
+	Delete(key interface{}) error    // 删除一个键值
+	Release()                        // 销毁该会话
 }
 
 ////
@@ -42,8 +43,8 @@ type SessionManager struct {
 	CookieExpire int         `json:"cookie_expire"`
 	StoreConfig  interface{} `json:"store_config"`
 
-	prepireRelease PrepireReleaseFunc // 会话过期时的回调
-	sessions       map[string]*list.Element
+	prepireRelease PrepireReleaseFunc       // 会话过期时的回调
+	sessions       map[string]*list.Element // 本系统所有管理的会话
 	list           *list.List
 	lock           sync.RWMutex
 	destroied      bool
