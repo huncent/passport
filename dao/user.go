@@ -18,8 +18,8 @@ type User struct {
 }
 
 func (p *User) Insert() (e error) {
-	_, e = common.DBs["passport"].Insert("INSERT INTO user values(?,?,?,?,?,?,?);",
-		p.Userid, p.Cellphone, p.Email, p.Nickname, p.Password, p.AddTime, 1)
+	_, e = common.DBs["passport"].Insert("INSERT INTO user(userid, cellphone, email, nickname, password, version) values(?,?,?,?,?,?);",
+		p.Userid, p.Cellphone, p.Email, p.Nickname, p.Password, time.Now().Unix())
 
 	return
 }
@@ -72,7 +72,14 @@ func (p *User) Update() (e error) {
 
 func (p *User) QueryByCellphone() (e error) {
 	var Cellphone, Email, Nickname, Password sql.NullString
-	e = common.DBs["passport"].Conn.QueryRow("SELECT userid, cellphone, email, nickname, password FROM user WHERE cellphone=?;", *p.Cellphone).Scan(&p.Userid, &Cellphone, &Email, &Nickname, &Password)
+	if e = common.DBs["passport"].Conn.QueryRow("SELECT userid, cellphone, email, nickname, password FROM user WHERE cellphone=?;", *p.Cellphone).Scan(&p.Userid, &Cellphone, &Email, &Nickname, &Password); e != nil {
+		if e == sql.ErrNoRows {
+			e = nil
+		}
+
+		return
+	}
+
 	if Cellphone.Valid {
 		p.Cellphone = &Cellphone.String
 	}

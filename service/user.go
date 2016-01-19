@@ -42,8 +42,7 @@ func (p *User) AddUser() (e error) {
 func (p *User) LoginByCellphone() (has bool, e error) {
 	p.pretreat()
 	one := p.toDao()
-	e = one.QueryByCellphone()
-	if e != nil {
+	if e = one.QueryByCellphone(); e != nil {
 		return
 	}
 

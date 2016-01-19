@@ -53,11 +53,7 @@ func optionsFilter(w http.ResponseWriter, r *http.Request) {
 }
 
 func authFilter(w http.ResponseWriter, r *http.Request) (sess session.SessionStore, auth bool) {
-	if e := r.ParseForm(); e != nil {
-		return nil, false
-	}
-
-	token := strings.TrimSpace(r.FormValue("token"))
+	token := strings.TrimSpace(r.Header.Get("TOKEN"))
 	if token == "" {
 		sessionConf := common.ServConfig.Session.(map[string]interface{})
 		if cookie, e := r.Cookie(sessionConf["cookie_name"].(string)); e == nil {
@@ -132,7 +128,6 @@ func UserAdd(w http.ResponseWriter, r *http.Request) {
 		log.Errorln("user.AddUser() ERR: ", err)
 		gocommon.HttpErr(w, http.StatusInternalServerError, "用户中心错误.")
 		return
-
 	}
 
 	log.Infoln("user add ok:", user.Userid)
