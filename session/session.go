@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 
@@ -83,8 +84,11 @@ func NewSessionManager(sessionConfig interface{}) (m *SessionManager) {
 		return nil
 	}
 
-	if err = json.Unmarshal(byteConf, m); err != nil {
-		return nil
+	dec := json.NewDecoder(strings.NewReader(string(byteConf)))
+	dec.UseNumber()
+	if err := dec.Decode(m); err != nil {
+		panic(err)
+
 	}
 
 	m.sessions = make(map[string]*list.Element)
