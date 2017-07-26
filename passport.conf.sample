@@ -1,6 +1,6 @@
 {
 	"domain": "passport.xim.com",
-	"listen": ":10000",
+	"listen": ":10001",
 	"serv_id": "6",
 	"dbs":[{
 		"name": "passport",
@@ -16,6 +16,6 @@
 		"cookie_expire": 86400
 	},
     "redis":"127.0.0.1:19738",
-    "appid":"wxbd5c8fec3c1dba1c",
-	"appsecrect":"b7c695693dcf2a8809bb1ddefbe35715"
+    "appid":"",
+	"appsecrect":""
 }

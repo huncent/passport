@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	confile = flag.String("c", "passport.conf.sample", "配置文件路径.")
+	confile = flag.String("c", "passport.conf", "配置文件路径.")
 
 	initSys = flag.Bool("init", false, "初始化系统.")
 )
