@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/liuhengloveyou/passport/common"
@@ -36,6 +37,19 @@ func (p *MiniAppUserInfo) Login() error {
 		return e
 	}
 
-	log.Infoln("jscode2session res: ", wxbody)
+	log.Infoln("jscode2session res: ", string(wxbody))
+
+	if e = json.Unmarshal(wxbody, p); e != nil {
+		log.Errorln("jscode2session json ERR: ", e.Error())
+		return e
+	}
+
+	log.Infof("jscode2session res: %#v", *p)
+
+	if p.ErrCode != 0 && p.ErrMsg != "" {
+		log.Errorf("jscode2session ERR: %#v", *p)
+		return fmt.Errorf("jscode2session ERR: %v, %v", p.ErrCode, p.ErrMsg)
+	}
+
 	return nil
 }
