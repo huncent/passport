@@ -24,6 +24,8 @@ func HttpService() {
 	http.HandleFunc("/user/auth", UserAuth)
 	http.HandleFunc("/user/logout", UserLogout)
 
+	http.Handle(LOCATION_MINIAPP, &miniappFace{})
+
 	s := &http.Server{
 		Addr:           common.ServConfig.Listen,
 		ReadTimeout:    10 * time.Minute,

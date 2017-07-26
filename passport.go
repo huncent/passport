@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	_ "net/http/pprof"
 
 	"github.com/liuhengloveyou/passport/common"
 	"github.com/liuhengloveyou/passport/face"

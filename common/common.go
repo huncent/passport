@@ -4,9 +4,11 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/liuhengloveyou/passport/session"
 
+	redis "github.com/garyburd/redigo/redis"
 	_ "github.com/go-sql-driver/mysql"
 	gocommon "github.com/liuhengloveyou/go-common"
 )
@@ -14,14 +16,23 @@ import (
 var (
 	ServConfig ConfigServ
 	DBs        = make(map[string]*gocommon.DBmysql)
+	RedisPool  [3]*redis.Pool
 )
 
 type ConfigServ struct {
 	Listen  string      `json:"listen"`
 	ServID  string      `json:"serv_id"`
+	Redis   string      `json:"redis"`
 	DBs     interface{} `json:"dbs"`
 	Session interface{} `json:"session"`
+
+	MiniAppid      string `json:"appid"`
+	MiniAppSecrect string `json:"appsecrect"`
 }
+
+type NilWriter struct{}
+
+func (p *NilWriter) Write(b []byte) (n int, err error) { return 0, nil }
 
 func InitPassportServ(confile string) error {
 	if e := gocommon.LoadJsonConfig(confile, &ServConfig); e != nil {
@@ -34,6 +45,11 @@ func InitPassportServ(confile string) error {
 
 	if nil == session.InitDefaultSessionManager(ServConfig.Session) {
 		return fmt.Errorf("InitDefaultSessionManager err.")
+	}
+
+	// redis 连接池
+	for i := 0; i < len(RedisPool); i++ {
+		RedisPool[i] = newRedisPool(ServConfig.Redis, i)
 	}
 
 	return nil
@@ -86,4 +102,23 @@ func InitSystem(conf interface{}) (err error) {
 	}
 
 	return nil
+}
+
+func newRedisPool(addr string, db int) *redis.Pool {
+	return &redis.Pool{
+		MaxIdle:     100,
+		IdleTimeout: 240 * time.Second,
+		Dial: func() (conn redis.Conn, e error) {
+			conn, e = redis.Dial("tcp", addr, redis.DialDatabase(db))
+			if e != nil {
+				conn = nil
+			}
+
+			return
+		},
+		TestOnBorrow: func(c redis.Conn, t time.Time) (e error) {
+			_, e = c.Do("PING")
+			return
+		},
+	}
 }
