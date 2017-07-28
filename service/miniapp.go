@@ -42,9 +42,9 @@ func (p *MiniAppUserInfo) Login() error {
 	jscode2session := "https://api.weixin.qq.com/sns/jscode2session?appid=%s&secret=%s&js_code=%s&grant_type=authorization_code"
 
 	// test
-	p.Openid = "testopenid000"
-	p.SessionKey = "testsession000"
-	return nil
+	//p.Openid = "testopenid000"
+	//p.SessionKey = "testsession000"
+	//return nil
 
 	_, wxbody, e := gocommon.GetRequest(fmt.Sprintf(jscode2session, common.ServConfig.MiniAppid, common.ServConfig.MiniAppSecrect, p.Code), nil)
 	if e != nil {
