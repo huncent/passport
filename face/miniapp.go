@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/liuhengloveyou/passport/service"
+	"github.com/liuhengloveyou/passport/session"
 
 	log "github.com/golang/glog"
 	gocommon "github.com/liuhengloveyou/go-common"
@@ -57,6 +58,21 @@ func (p *miniappFace) onLogin(w http.ResponseWriter, r *http.Request) {
 		gocommon.HttpErr(w, http.StatusInternalServerError, e.Error())
 		return
 	}
+
+	// wx登录成功
+	sess, err := session.GetSession(w, r, "")
+	if err != nil {
+		gocommon.HttpErr(w, http.StatusInternalServerError, "会话错误.")
+		log.Errorln("session.GetSession ERR:", err.Error())
+		return
+	}
+
+	sess.Set("openid", userInfo.Openid)
+	sess.Set("sessionkey", userInfo.SessionKey)
+
+	w.Write([]byte("{\"sessionid\":\"" + sess.Id("") + "\"}"))
+
+	log.Warning("login ok:", userInfo)
 
 	return
 }
