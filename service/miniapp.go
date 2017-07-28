@@ -21,7 +21,7 @@ type LoginRst struct {
 }
 
 type MiniAppUserInfo struct {
-	Code       string `json:"code"`
+	Code       string `json:"-"`
 	Openid     string `json:"openid"`
 	SessionKey string `json:"session_key"`
 

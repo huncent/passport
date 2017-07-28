@@ -68,7 +68,7 @@ func (p *miniappFace) onLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sess.Set("openid", userInfo.Openid)
-	sess.Set("sessionkey", userInfo.SessionKey)
+	sess.Set("session_key", userInfo.SessionKey)
 
 	w.Write([]byte("{\"sessionid\":\"" + sess.Id("") + "\"}"))
 
