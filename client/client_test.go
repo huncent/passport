@@ -5,18 +5,25 @@ import (
 	"testing"
 
 	"github.com/liuhengloveyou/passport/client"
+
+	gocommon "github.com/liuhengloveyou/go-common"
 )
 
-var passClient = &client.Passport{"http://localhost:8080"}
+var passClient = &client.Passport{"http://127.0.0.1:10001"}
 
 func TestUserAdd(t *testing.T) {
-	data := `{"cellphone":"18510511015", "email":"liuhengloveyou@gmail.com", "nickname":"L", "password":"123456"}`
-	stat, rst, e := passClient.UserAdd(data)
-	fmt.Println(stat, rst, e)
+	rst, e := passClient.UserAdd("18510511015", "liuhengloveyou@gmail.com", "L", "123456")
+	fmt.Println(rst, e)
 }
 
-func TestUserLogin(t *testing.T) {
-	data := `{"cellphone":"18510511015", "email":"liuhengloveyou@gmail.com", "nickname":"L", "password":"123456"}`
-	stat, rst, e := passClient.UserLogin(data)
-	fmt.Println(stat, rst, e)
+func TestMiniAppLogin(t *testing.T) {
+	status, _, body, err := gocommon.PostRequest("http://127.0.0.1:10001/miniapp/login", []byte("{\"code\":\"code.....\"}"), nil, nil)
+
+	fmt.Println(status, string(body), err)
+}
+
+func TestUserAuth(t *testing.T) {
+	rst, e := passClient.UserAuth("2e7540034d62a6c1d535cbe9d434f59b3f8c73b7a7c341ec")
+	fmt.Println(string(rst), e)
+
 }

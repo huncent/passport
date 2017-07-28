@@ -44,14 +44,15 @@ func (p *Passport) UserAdd(cellphone, email, nickname, password string) (userid 
 }
 
 func (p *Passport) UserAuth(token string) (sessionInfo []byte, err error) {
-	header := &map[string]string{"TOKEN": token}
-	status, _, response, err := gocommon.GetRequest(p.ServAddr+"/user/auth", header)
+	header := map[string]string{"TOKEN": token}
+	response, body, err := gocommon.GetRequest(p.ServAddr+"/user/auth", header)
 	if err != nil {
 		return nil, err
 	}
-	if status != http.StatusOK {
+
+	if response.StatusCode != http.StatusOK {
 		return nil, nil
 	}
 
-	return response, nil
+	return body, nil
 }

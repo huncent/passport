@@ -64,15 +64,18 @@ func authFilter(w http.ResponseWriter, r *http.Request) (sess session.SessionSto
 			}
 		}
 	}
+
 	if token == "" {
 		return nil, false
 	}
+	log.Infoln("token:", token)
 
 	sess, err := session.GetSessionById(token)
 	if err != nil {
 		log.Warningln("session ERR:", err.Error())
 		return nil, false
 	}
+	log.Infoln("sess:", sess)
 
 	if sess.Get("user") == nil {
 		log.Errorln("session no user:", sess)
@@ -302,11 +305,14 @@ func UserAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	mUser := sess.Get("user").(*service.User)
-	mUser.Password = ""
-	log.Infoln("auth:", mUser, sess)
+	log.Infof("auth: %#v", sess)
 
-	userStr, _ := json.Marshal(mUser)
+	if mUser, ok := sess.Get("user").(*service.User); ok {
+		mUser.Password = ""
+		return
+	}
+
+	userStr, _ := json.Marshal(sess.Get("user"))
 	w.Write(userStr)
 
 	return

@@ -67,12 +67,11 @@ func (p *miniappFace) onLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sess.Set("openid", userInfo.Openid)
-	sess.Set("session_key", userInfo.SessionKey)
+	sess.Set("user", userInfo)
 
 	w.Write([]byte("{\"sessionid\":\"" + sess.Id("") + "\"}"))
 
-	log.Warning("login ok:", userInfo)
+	log.Warningf("login ok: %#v", userInfo)
 
 	return
 }
