@@ -71,7 +71,7 @@ func (p *miniappFace) onLogin(w http.ResponseWriter, r *http.Request) {
 
 	w.Write([]byte("{\"sessionid\":\"" + sess.Id("") + "\"}"))
 
-	log.Warningf("login ok: %#v", userInfo)
+	log.Warningf("login ok: %s %#v", sess.Id(""), userInfo)
 
 	return
 }
