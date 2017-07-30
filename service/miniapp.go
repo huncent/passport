@@ -24,9 +24,10 @@ type MiniAppUserInfo struct {
 	sessionid string
 	Code      string `json:"code"`
 
-	Openid     string `json:"openid"`
+	UserId     string `json:"uid"`
 	SessionKey string `json:"session_key"`
 
+	Openid    string `json:"openid"`
 	AvatarUrl string `json:"avatarUrl"`
 	City      string `json:"city"`
 	Country   string `json:"country"`
@@ -64,6 +65,13 @@ func (p *MiniAppUserInfo) Login() error {
 	if p.ErrCode != 0 && p.ErrMsg != "" {
 		log.Errorf("jscode2session ERR: %#v", *p)
 		return fmt.Errorf("jscode2session ERR: %v, %v", p.ErrCode, p.ErrMsg)
+	}
+
+	// 生成用户ID
+	p.UserId, e = gocommon.AesCBCEncrypt(p.Openid, common.ServConfig.UserKey)
+	if e != nil {
+		log.Errorln("genuid ERR: ", e.Error())
+		return e
 	}
 
 	return nil

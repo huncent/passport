@@ -28,6 +28,7 @@ type ConfigServ struct {
 
 	MiniAppid      string `json:"appid"`
 	MiniAppSecrect string `json:"appsecrect"`
+	UserKey        string `json:"user_key"`
 }
 
 type NilWriter struct{}
