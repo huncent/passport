@@ -22,19 +22,11 @@ type LoginRst struct {
 
 type MiniAppUserInfo struct {
 	sessionid string
-	Code      string `json:"code"`
 
 	UserId     string `json:"uid"`
+	Code       string `json:"code"`
+	Openid     string `json:"openid"`
 	SessionKey string `json:"session_key"`
-
-	Openid    string `json:"openid"`
-	AvatarUrl string `json:"avatarUrl"`
-	City      string `json:"city"`
-	Country   string `json:"country"`
-	Language  string `json:"language"`
-	NickName  string `json:"nickName"`
-	Province  string `json:"province"`
-	Gender    int    `json:"gender"`
 
 	MiniAppErr
 }
