@@ -1,5 +1,6 @@
 {
 	"domain": "passport.xim.com",
+    "face": "grpc",
 	"listen": ":10001",
 	"serv_id": "6",
 	"dbs":[{

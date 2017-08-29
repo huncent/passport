@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	_ "net/http/pprof"
 
 	"github.com/liuhengloveyou/passport/common"
@@ -9,7 +10,7 @@ import (
 )
 
 var (
-	confile = flag.String("conf", "passport.conf", "配置文件路径.")
+	confile = flag.String("c", "passport.conf.sample", "配置文件路径.")
 
 	initSys = flag.Bool("init", false, "初始化系统.")
 )
@@ -28,5 +29,12 @@ func main() {
 		return
 	}
 
-	face.HttpService()
+	switch common.ServConfig.Face {
+	case "http":
+		face.HttpService()
+	case "grpc":
+		face.GrpcFace()
+	default:
+		fmt.Println("face: [http | grpc]")
+	}
 }

@@ -20,6 +20,7 @@ var (
 )
 
 type ConfigServ struct {
+	Face    string      `json:"face"`
 	Listen  string      `json:"listen"`
 	ServID  string      `json:"serv_id"`
 	Redis   string      `json:"redis"`

@@ -26,6 +26,11 @@ func HttpService() {
 
 	http.Handle(LOCATION_MINIAPP, &miniappFace{})
 
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("404: ", r.RequestURI)
+		w.WriteHeader(http.StatusNotFound)
+	})
+
 	s := &http.Server{
 		Addr:           common.ServConfig.Listen,
 		ReadTimeout:    10 * time.Minute,
