@@ -24,7 +24,7 @@ func HttpService() {
 	http.HandleFunc("/user/auth", UserAuth)
 	http.HandleFunc("/user/logout", UserLogout)
 
-	http.Handle(LOCATION_MINIAPP, &miniappFace{})
+	http.Handle(LOCATION_WX, &WxFace{})
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("404: ", r.RequestURI)
@@ -48,8 +48,6 @@ func HttpService() {
  * 跨域资源共享
  */
 func optionsFilter(w http.ResponseWriter, r *http.Request) {
-	return
-
 	w.Header().Set("Access-Control-Allow-Origin", "http://web.xim.com:9000")
 	w.Header().Set("Access-Control-Allow-Methods", "POST")
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
@@ -59,17 +57,15 @@ func optionsFilter(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func authFilter(w http.ResponseWriter, r *http.Request) (sess session.SessionStore, auth bool) {
-	token := strings.TrimSpace(r.Header.Get("TOKEN"))
+func AuthFilter(w http.ResponseWriter, r *http.Request) (sess session.SessionStore, auth bool) {
+	token := strings.TrimSpace(r.Header.Get("sessionid"))
 	if token == "" {
-		sessionConf := common.ServConfig.Session.(map[string]interface{})
-		if cookie, e := r.Cookie(sessionConf["cookie_name"].(string)); e == nil {
+		if cookie, e := r.Cookie("sessionid"); e == nil {
 			if cookie != nil {
 				token = cookie.Value
 			}
 		}
 	}
-
 	if token == "" {
 		return nil, false
 	}
@@ -156,7 +152,7 @@ func UserModify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//只有登录用户有权修改信息
-	_, auth := authFilter(w, r)
+	_, auth := AuthFilter(w, r)
 	if auth == false {
 		gocommon.HttpErr(w, http.StatusForbidden, "末登录用户.")
 		return
@@ -299,12 +295,12 @@ func UserLogout(w http.ResponseWriter, r *http.Request) {
 }
 
 func UserAuth(w http.ResponseWriter, r *http.Request) {
-	optionsFilter(w, r)
-	if r.Method == "OPTIONS" {
-		return
-	}
+	//	optionsFilter(w, r)
+	//	if r.Method == "OPTIONS" {
+	//		return
+	//	}
 
-	sess, auth := authFilter(w, r)
+	sess, auth := AuthFilter(w, r)
 	if auth == false {
 		gocommon.HttpErr(w, http.StatusForbidden, "末登录.")
 		return

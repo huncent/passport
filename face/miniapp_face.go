@@ -12,15 +12,19 @@ import (
 	gocommon "github.com/liuhengloveyou/go-common"
 )
 
-const LOCATION_MINIAPP = "/miniapp/"
+const LOCATION_WX = "/wx/"
 
-type miniappFace struct{}
+type WxFace struct {
+	UserKey    string
+	Appid      string
+	AppSecrect string
+}
 
-func (p *miniappFace) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (p *WxFace) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
-	switch r.RequestURI[len(LOCATION_MINIAPP):] {
-	case "login":
-		p.onLogin(w, r)
+	switch r.RequestURI[len(LOCATION_WX):] {
+	case "miniapp/login":
+		p.miniappLogin(w, r)
 		return
 	default:
 		log.Warningln("404: ", r.RequestURI)
@@ -31,7 +35,7 @@ func (p *miniappFace) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func (p *miniappFace) onLogin(w http.ResponseWriter, r *http.Request) {
+func (p *WxFace) miniappLogin(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		gocommon.HttpErr(w, http.StatusMethodNotAllowed, "only post")
 		return
@@ -44,16 +48,21 @@ func (p *miniappFace) onLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userInfo := &service.MiniAppUserInfo{}
-	if e := json.Unmarshal(body, userInfo); e != nil {
+	log.Infoln("miniapp.onlogin body: ", string(body))
+
+	app := &service.MiniApp{
+		UserKey:    p.UserKey,
+		Appid:      p.Appid,
+		AppSecrect: p.AppSecrect,
+	}
+	if e := json.Unmarshal(body, app); e != nil {
 		log.Errorln("onlogin Unmarshal body ERR: ", e.Error())
 		gocommon.HttpErr(w, http.StatusBadRequest, "body err.")
 		return
 	}
 
-	log.Infoln("miniapp.onlogin body: ", string(body))
-
-	if e = userInfo.Login(); e != nil {
+	info, e := app.Login()
+	if e != nil {
 		log.Errorln("miniapp user onlogin ERR: ", e.Error())
 		gocommon.HttpErr(w, http.StatusInternalServerError, e.Error())
 		return
@@ -67,11 +76,11 @@ func (p *miniappFace) onLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sess.Set("user", userInfo)
+	sess.Set("user", info)
 
 	w.Write([]byte("{\"sessionid\":\"" + sess.Id("") + "\"}"))
 
-	log.Warningf("login ok: %s %#v", sess.Id(""), userInfo)
+	log.Warningf("login ok: %s %#v", sess.Id(""), info)
 
 	return
 }

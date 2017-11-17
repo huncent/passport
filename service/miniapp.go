@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/liuhengloveyou/passport/common"
-
 	log "github.com/golang/glog"
 	gocommon "github.com/liuhengloveyou/go-common"
 )
@@ -31,34 +29,40 @@ type MiniAppUserInfo struct {
 	MiniAppErr
 }
 
-func (p *MiniAppUserInfo) Login() error {
+type MiniApp struct {
+	UserKey    string
+	Code       string
+	Appid      string
+	AppSecrect string
+}
+
+func (p *MiniApp) Login() (*MiniAppUserInfo, error) {
 	_, wxbody, e := gocommon.GetRequest(fmt.Sprintf("https://api.weixin.qq.com/sns/jscode2session?appid=%s&secret=%s&js_code=%s&grant_type=authorization_code",
-		common.ServConfig.MiniAppid, common.ServConfig.MiniAppSecrect, p.Code), nil)
+		p.Appid, p.AppSecrect, p.Code), nil)
 	if e != nil {
-		log.Errorln("get wx ERR: ", e.Error())
-		return e
+		log.Errorln("jscode2session ERR: ", e.Error())
+		return nil, e
 	}
 
-	log.Infoln("jscode2session res: ", string(wxbody))
+	log.Infoln("jscode2session: ", string(wxbody))
 
-	if e = json.Unmarshal(wxbody, p); e != nil {
+	userInfo := &MiniAppUserInfo{}
+	if e = json.Unmarshal(wxbody, userInfo); e != nil {
 		log.Errorln("jscode2session json ERR: ", e.Error())
-		return e
+		return nil, e
 	}
 
-	log.Infof("jscode2session res: %#v", *p)
-
-	if p.ErrCode != 0 && p.ErrMsg != "" {
-		log.Errorf("jscode2session ERR: %#v", *p)
-		return fmt.Errorf("jscode2session ERR: %v, %v", p.ErrCode, p.ErrMsg)
+	if userInfo.ErrCode != 0 && userInfo.ErrMsg != "" {
+		log.Errorf("jscode2session ERR: %#v", userInfo)
+		return nil, fmt.Errorf("jscode2session ERR: %v, %v", userInfo.ErrCode, userInfo.ErrMsg)
 	}
 
 	// 生成用户ID
-	p.UserId, e = gocommon.AesCBCEncrypt(p.Openid, common.ServConfig.UserKey)
+	userInfo.UserId, e = gocommon.AesCBCEncrypt(userInfo.Openid, p.UserKey)
 	if e != nil {
 		log.Errorln("genuid ERR: ", e.Error())
-		return e
+		return nil, e
 	}
 
-	return nil
+	return userInfo, nil
 }

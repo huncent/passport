@@ -26,17 +26,17 @@ func (p *Passport) UserAdd(cellphone, email, nickname, password string) (userid 
 		return "", err
 	}
 
-	status, _, response, err := gocommon.PostRequest(p.ServAddr+"/user/add", body, nil, nil)
+	response, resBody, err := gocommon.PostRequest(p.ServAddr+"/user/add", body, nil, nil)
 	if err != nil {
 		return "", err
 	}
 
-	if status != http.StatusOK {
-		return "", fmt.Errorf("%s", response)
+	if response.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("%s", resBody)
 	}
 
 	rst := make(map[string]string, 0)
-	if err = json.Unmarshal(response, &rst); err != nil {
+	if err = json.Unmarshal(resBody, &rst); err != nil {
 		return "", err
 	}
 
